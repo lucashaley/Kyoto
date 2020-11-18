@@ -31,6 +31,7 @@ namespace Kyoto
 
         void Rotate()
         {
+            // RERACTOR do we still need this?
             Debug.Log("ROTATE start");
             // Debug.Break();
             // Debug.Log(gridMover.footprint.x + gridMover.footprint.y);
@@ -50,7 +51,7 @@ namespace Kyoto
             rend = gameObject.GetComponentInChildren<Renderer>();
             mask = LayerMask.GetMask("Tiles");
             pivot = transform.Find("Pivot").gameObject;
-            cube = transform.Find("Pivot/Cube").gameObject;
+            cube = transform.Find("Pivot/PositionerCube_01").gameObject;
 
             // What is going on here?
             // Debug.Break();
@@ -94,6 +95,15 @@ namespace Kyoto
             rend.enabled = true;
         }
 
+        public void SetVolume(Vector3Int vol)
+        {
+            cube.transform.localScale = vol;
+            // cube.transform.localPosition = (Vector3)vol/2;
+
+            GetComponent<BoxCollider>().size = vol;
+            GetComponent<BoxCollider>().center = (Vector3)vol/2;
+        }
+
         void Deactivate()
         {
             if (currentSelection) currentSelection.GetComponent<Placeable>().Deselect();
@@ -110,7 +120,7 @@ namespace Kyoto
             switch (CollisionNormal())
             {
                 case Vector3 v when v == Vector3.up:
-                    // Rotate();
+                    Rotate();
                     rotatePositionerEvent.Invoke(90);
                     break;
                 case Vector3 v when v == Vector3.left || v == Vector3.back:
@@ -138,15 +148,6 @@ namespace Kyoto
         {
             // REFACTOR: do we even need this layer any more?
             Deactivate();
-        }
-
-        public void SetVolume(Vector3Int vol)
-        {
-            cube.transform.localScale = vol;
-            cube.transform.localPosition = (Vector3)vol/2;
-
-            GetComponent<BoxCollider>().size = vol;
-            GetComponent<BoxCollider>().center = (Vector3)vol/2;
         }
 
         private Transform TransformFromRaycast()

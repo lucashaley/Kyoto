@@ -40,7 +40,8 @@ namespace Kyoto
         {
             rend = GetComponentInChildren<Renderer>();
             // rotationPoint = transform.position + (footprint.Vector3NoY()/2);
-            rotationPoint = footprint.Vector3NoY() * 0.5f;
+            // rotationPoint = footprint.Vector3NoY() * 0.5f;
+            rotationPoint = new Vector3(0.5f, 0f, 0.5f);
             pivot = transform.Find("Pivot");
         }
 
@@ -92,10 +93,6 @@ namespace Kyoto
 
         void HandleRotateAround(float value)
         {
-            Debug.Log("RotateAround: " + value);
-            // transform.RotateAround(transform.TransformPoint(rotationPoint),
-            //                        Vector3.up,
-            //                        value);
             pivot.RotateAround(pivot.TransformPoint(rotationPoint),
                                   Vector3.up,
                                   value);
@@ -117,44 +114,6 @@ namespace Kyoto
             {
                 Transform t = rotateBase ? rotateBase : transform;
 
-                // Debug.Log("Check if odd footprint: " + ((footprint.x + footprint.y)%2 == 1));
-                // if ((footprint.x + footprint.y)%2 == 1)
-                // {
-                //     Debug.Log("Current position sum: " + (transform.localPosition.x + transform.localPosition.z));
-                //     float currentPoint = transform.position.x + transform.position.z;
-                //     Vector3 newPosition = Vector3.zero;
-                //     if (currentPoint - (int)currentPoint == 0.5)
-                //     {
-                //         Debug.Log("MUNG");
-                //         newPosition = transform.position.Rounded(1);
-                //     } else {
-                //         newPosition = footprint.Vector3NoY()/2;
-                //     }
-                //     Tween.LocalPosition(transform,
-                //                   newPosition,
-                //                   fadeValue.Value,
-                //                   0.0f,
-                //                   Tween.EaseInOutStrong,
-                //                   Tween.LoopType.None,
-                //                   () => isTweening = true,
-                //                   () => isTweening = false
-                //                   );
-                // }
-                // Tween.Rotate(t,
-                //               new Vector3 (0, degrees, 0),
-                //               Space.Self,
-                //               fadeValue.Value,
-                //               0.0f,
-                //               Tween.EaseInOutStrong,
-                //               Tween.LoopType.None,
-                //               () => isTweening = true,
-                //               () => isTweening = false
-                //               );
-
-                Debug.Log("Start " + gameObject.name + ": " + transform.rotation.y);
-                Debug.Log("End: " + (transform.rotation.y + degrees));
-                Debug.Log("Point: " + (transform.localPosition + (footprint.Vector3NoY()/2)));
-                // rotationPoint = transform.position + (footprint.Vector3NoY()/2);
                 rotationStart = pivot.rotation.y;
                 Tween.ValueRelative(rotationStart,
                             rotationStart + degrees,

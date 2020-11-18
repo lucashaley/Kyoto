@@ -1,32 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &8107379342673021043
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 262017575501266588}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cde13c74e4a0c41f096bb55f1d35510a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  footprint: {x: 2, y: 1}
-  moveBase: {fileID: 0}
-  rotateBase: {fileID: 0}
-  fancy: 1
-  fromCenter: 1
-  isMoving: 0
-  isRotating: 0
-  isTweening: 0
-  fadeValue: {fileID: 11400000, guid: dd11e5ffb7cea4a14b129c4886f1c506, type: 2}
-  curve: {fileID: 11400000, guid: 4e9fbd577d75d4b7b8328cf2ee5fef9e, type: 2}
-  rend: {fileID: 0}
-  rotationPoint: {x: 0, y: 0, z: 0}
-  doneMoving:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!1 &5719642531726513408
 GameObject:
   m_ObjectHideFlags: 0
@@ -37,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5982707054499805639}
   m_Layer: 0
-  m_Name: Geometry
+  m_Name: Pivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -103,7 +76,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e187932ada1d414aa9e11bd3ac01eca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  footprint: {x: 1, y: 1}
+  footprint: {x: 2, y: 1}
   volume: {x: 2, y: 2, z: 1}
 --- !u!114 &8107379342326728743
 MonoBehaviour:
@@ -129,6 +102,7 @@ MonoBehaviour:
   curve: {fileID: 11400000, guid: 4e9fbd577d75d4b7b8328cf2ee5fef9e, type: 2}
   rend: {fileID: 0}
   rotationPoint: {x: 0, y: 0, z: 0}
+  pivot: {fileID: 0}
   doneMoving:
     m_PersistentCalls:
       m_Calls: []
@@ -201,12 +175,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bbd08ca136f1b4665a2e8d242a65e755, type: 3}
---- !u!1 &262017575501266588 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: -927199367670048503, guid: bbd08ca136f1b4665a2e8d242a65e755,
-    type: 3}
-  m_PrefabInstance: {fileID: 8107379342593894293}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3889287363439856783 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4216859302048453862, guid: bbd08ca136f1b4665a2e8d242a65e755,
