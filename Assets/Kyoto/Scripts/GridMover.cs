@@ -16,6 +16,7 @@ namespace Kyoto
 
         public bool fancy = true;
         public bool fromCenter = true;
+        public bool usePivotOffset = true;
 
         // States
         // REFACTOR not sure we need isMoving any more
@@ -43,6 +44,16 @@ namespace Kyoto
             // rotationPoint = footprint.Vector3NoY() * 0.5f;
             rotationPoint = new Vector3(0.5f, 0f, 0.5f);
             pivot = transform.Find("Pivot");
+
+            if (usePivotOffset)
+            {
+                // pivot.Translate(new Vector3(0.5f, 0f, 0.5f));
+
+                Transform[] childrenTransforms = pivot.GetComponentsInChildren<Transform>();
+                foreach (Transform t in childrenTransforms)
+                    t.localPosition = new Vector3(-0.5f, 0f, -0.5f);
+                pivot.localPosition = new Vector3(0.5f, 0f, 0.5f);
+            }
         }
 
         void StartTween()
@@ -54,6 +65,13 @@ namespace Kyoto
         void EndTween()
         {
             isTweening = false;
+
+            // REFACTOR this to one Transform extension?
+            transform.position = transform.position.RoundedInt();
+            transform.localScale = Vector3.one;
+
+            pivot.localEulerAngles = Vector3Int.FloorToInt(pivot.localEulerAngles);
+
             doneMoving.Invoke(true);
         }
 
@@ -88,7 +106,6 @@ namespace Kyoto
                                  Tween.LoopType.None
                                  );
             }
-            // movePositionerEvent.Invoke(destination);
         }
 
         void HandleRotateAround(float value)
@@ -108,7 +125,33 @@ namespace Kyoto
 
         }
 
-        public void RotateByInt(int degrees)
+        public void RotateStep()
+        {
+            if (!isTweening)
+            {
+                Tween.LocalRotation(pivot,
+                                    pivot.localEulerAngles + (Vector3.up * 90f),
+                                    fadeValue.Value,
+                                    0.0f,
+                                    Tween.EaseInOutStrong,
+                                    Tween.LoopType.None,
+                                    StartTween,
+                                    EndTween
+                                    );
+                if (fancy)
+                {
+                    Tween.LocalScale(transform,
+                                   new Vector3(0.85f, 0.85f, 0.85f),
+                                   fadeValue.Value,
+                                   0,
+                                   curve.curve,
+                                   Tween.LoopType.None
+                                   );
+                }
+            }
+        }
+
+        public void RotateByIntRelative(int degrees)
         {
             if (!isTweening)
             {

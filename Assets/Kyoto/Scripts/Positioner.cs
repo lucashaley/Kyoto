@@ -17,7 +17,7 @@ namespace Kyoto
 
         public Vector2IntEvent movePositionerEvent;
         public Vector2IntEvent rotateToPositionerEvent;
-        public IntEvent rotatePositionerEvent;
+        public UnityEvent rotatePositionerEvent;
 
         // this event is for when a placeable gets deselected
         // not sure we need it though
@@ -43,6 +43,11 @@ namespace Kyoto
                 // Check around
                 // rotatePositionerEvent.Invoke();
                 rotateToPositionerEvent.Invoke(Vector2Int.one);
+
+                // Debug.Log("Rotate footprint: " + transform.Position2dInt().Rotate90CW(gridMover.footprint));
+                // Debug.Log(TileController.Instance.CheckTileOccupancy(transform.Position2dInt(), gridMover.footprint));
+                Debug.Log("Current Footprint: " + currentSelection.GetComponent<Placeable>().GetCurrentFootprint());
+                TileController.Instance.CheckTileOccupancyByPosition(transform.Position2dInt(), transform.Position2dInt() + gridMover.footprint);
             }
         }
 
@@ -82,7 +87,7 @@ namespace Kyoto
             if (currentSelection)
             {
                 currentSelection.GetComponent<Placeable>().Deselect();
-                pivot.transform.ResetTransformation();
+                // pivot.transform.ResetTransformation();
                 gridMover.footprint = Vector2Int.one;
             }
 
@@ -99,6 +104,7 @@ namespace Kyoto
         {
             cube.transform.localScale = vol;
             // cube.transform.localPosition = (Vector3)vol/2;
+            // cube.transform.localPosition =
 
             GetComponent<BoxCollider>().size = vol;
             GetComponent<BoxCollider>().center = (Vector3)vol/2;
@@ -121,7 +127,8 @@ namespace Kyoto
             {
                 case Vector3 v when v == Vector3.up:
                     Rotate();
-                    rotatePositionerEvent.Invoke(90);
+                    // rotatePositionerEvent.Invoke(90);
+                    rotatePositionerEvent.Invoke();
                     break;
                 case Vector3 v when v == Vector3.left || v == Vector3.back:
                     isMoving = true;

@@ -22,5 +22,11 @@ namespace Kyoto
                 GetComponentInChildren<Renderer>().material.color = Color.white;
             }
         }
+
+        public bool IsOccupied(Placeable placeable = null)
+        {
+            Debug.Log("IsOccupied: " + transform.Position2dInt() + ", " + occupier + ", " + (occupier != null), this);
+            return (occupier != null || occupier != placeable);
+        }
     }
 }

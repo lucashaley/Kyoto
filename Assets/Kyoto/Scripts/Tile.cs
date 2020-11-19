@@ -41,6 +41,9 @@ namespace Kyoto
             boundsMax = tileCollider.bounds.max;
             enterEdge = exitEdge = TileEdge.None;
             TileController.Instance.AddTile(this, transform.Position2dInt());
+
+            // Change the name of the Tile to reflect it's position
+            gameObject.name = "Tile " + transform.Position2dInt();
         }
 
         void OnMouseDown()

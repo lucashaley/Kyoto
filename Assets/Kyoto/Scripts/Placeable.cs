@@ -57,13 +57,13 @@ namespace Kyoto
             positioner.Activate(this);
 
             positioner.movePositionerEvent.AddListener(Place);
-            positioner.rotatePositionerEvent.AddListener(GetComponent<GridMover>().RotateByInt);
+            positioner.rotatePositionerEvent.AddListener(GetComponent<GridMover>().RotateStep);
         }
 
         public void Deselect()
         {
             positioner.movePositionerEvent.RemoveListener(Place);
-            positioner.rotatePositionerEvent.RemoveListener(GetComponent<GridMover>().RotateByInt);
+            positioner.rotatePositionerEvent.RemoveListener(GetComponent<GridMover>().RotateStep);
 
             geoCatch.SetActive(true);
         }
@@ -75,22 +75,22 @@ namespace Kyoto
         }
 
         /// <remarks>
-        /// If doneMoving is true, it sends this Placeeable.
+        /// If doneMoving is true, it sends this Placeable.
         /// </remarks>
         void SetOccupancy(bool doneMoving)
         {
             foreach (Vector2Int v in this)
             {
-                Debug.Log("Occupancy: " + v);
+                // Debug.Log("Occupancy: " + v);
                 TileController.Instance.SetTileOccupancy(v, doneMoving ? this : null);
             }
         }
 
         void ClampTransform(bool doneMoving)
         {
-            Debug.Log("ClampTransform");
-            transform.position = transform.position.RoundedInt();
-            transform.localScale = Vector3.one;
+            //Moved this to the GridMover
+            // transform.position = transform.position.RoundedInt();
+            // transform.localScale = Vector3.one;
         }
 
 
@@ -115,22 +115,25 @@ namespace Kyoto
             // Create the collider dynamically on runtime. So it doesn't clutter up the inspector.
             tileCatch = new GameObject("TileCatch");
             tileCatch.layer = 8;
-            tileCatch.transform.SetParent(transform);
+            tileCatch.transform.SetParent(transform, false);
             BoxCollider col = tileCatch.AddComponent<BoxCollider>();
             col.size = new Vector3(footprint.x, 0.3f, footprint.y);
             col.center = new Vector3(footprint.x*0.5f, -0.05f, footprint.y*0.5f);
-            tileCatch.transform.localPosition = Vector3.zero;
-            // tileCatch.SetActive(false);
         }
 
         private void CreateGeoCatch()
         {
-            geoCatch = new GameObject("GeoCatch");
-            geoCatch.transform.SetParent(transform);
+            geoCatch = new GameObject("GeoCatch", typeof(PlaceableGeometry));
+            geoCatch.transform.SetParent(transform, false);
             MeshCollider geo = geoCatch.AddComponent<MeshCollider>();
             geo.sharedMesh = gameObject.GetComponentInChildren<MeshFilter>().sharedMesh;
-            geoCatch.transform.localPosition = new Vector3(footprint.x*0.5f, 0f, footprint.y*0.5f);
-            geoCatch.AddComponent<PlaceableGeometry>();
+        }
+
+        public (Vector2Int start, Vector2Int end) GetCurrentFootprint()
+        {
+            Debug.Log("Footprint rotation: " + GetComponent<GridMover>().pivot.rotation.eulerAngles);
+            // Keep in mind iterating through this will need to stop before the end.
+            return (transform.Position2dInt(), transform.Position2dInt() + footprint);
         }
     }
 }

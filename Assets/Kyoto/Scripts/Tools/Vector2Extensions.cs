@@ -35,5 +35,15 @@ namespace Kyoto
                 v.y
             );
         }
+
+        public static Vector2Int Rotate90CW(this Vector2Int v, Vector2Int footprint)
+        {
+            return Vector2Int.one;
+        }
+
+        public static Vector2Int Transpose(this Vector2Int v)
+        {
+            return new Vector2Int(v.y, v.x);
+        }
     }
 }

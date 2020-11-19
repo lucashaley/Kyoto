@@ -49,5 +49,43 @@ namespace Kyoto
 
             GetTile(inPosition).GetComponent<TileOccupancy>().SetOccupier(inPlaceable);
         }
+
+        // this is the prototype relative version -- still needed?
+        public bool CheckTileOccupancy(Vector2Int origin, Vector2Int footprint)
+        {
+            Debug.Log("CheckTileOccupancy: " + origin + " and " + footprint);
+            for (int x = 0; x < footprint.x; x++)
+            {
+                for (int y = 0; y < footprint.y; y++)
+                {
+                    if (GetTile(new Vector2Int(origin.x + x, origin.y + y)).GetComponent<TileOccupancy>().IsOccupied())
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        // this is the absolute version
+        public bool CheckTileOccupancyByPosition(Vector2Int start, Vector2Int end)
+        {
+            Vector2Int iterator  = end - start;
+            Debug.Log("Iterator: " + iterator);
+            // Debug.Break();
+
+            for (int x = 0; x < iterator.x; x++)
+            {
+                for (int y = 0; y < iterator.y; y++)
+                {
+                    if (GetTile(new Vector2Int(start.x + x, start.y + y)).GetComponent<TileOccupancy>().IsOccupied())
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
     }
 }
