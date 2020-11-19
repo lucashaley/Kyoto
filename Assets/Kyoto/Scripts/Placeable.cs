@@ -131,9 +131,37 @@ namespace Kyoto
 
         public (Vector2Int start, Vector2Int end) GetCurrentFootprint()
         {
-            Debug.Log("Footprint rotation: " + GetComponent<GridMover>().pivot.rotation.eulerAngles);
+            return GetFootprintWithRotationStep(GetComponent<GridMover>().rotationStep);
+        }
+
+        public (Vector2Int start, Vector2Int end) GetFootprintWithRotationStep(int step)
+        {
+            Vector2Int end = Vector2Int.zero;
+            Vector2Int adjustedFootprint = footprint - Vector2Int.one;
+            Debug.Log("adjustedFootprint: " + adjustedFootprint);
+            switch (step)
+            {
+                case 0:
+                    end = transform.Position2dInt() + adjustedFootprint;
+                    break;
+
+                case 1:
+                    end = transform.Position2dInt() - adjustedFootprint.Transpose();
+                    break;
+
+                case 2:
+                    end = transform.Position2dInt() - adjustedFootprint;
+                    break;
+
+                case 3:
+                    end = transform.Position2dInt() + adjustedFootprint.Transpose();
+                    break;
+
+            }
+            Debug.Log("Footprint rotation: " +
+                    GetComponent<GridMover>().pivot.rotation.eulerAngles);
             // Keep in mind iterating through this will need to stop before the end.
-            return (transform.Position2dInt(), transform.Position2dInt() + footprint);
+            return (transform.Position2dInt(), end);
         }
     }
 }

@@ -46,8 +46,12 @@ namespace Kyoto
 
                 // Debug.Log("Rotate footprint: " + transform.Position2dInt().Rotate90CW(gridMover.footprint));
                 // Debug.Log(TileController.Instance.CheckTileOccupancy(transform.Position2dInt(), gridMover.footprint));
-                Debug.Log("Current Footprint: " + currentSelection.GetComponent<Placeable>().GetCurrentFootprint());
-                TileController.Instance.CheckTileOccupancyByPosition(transform.Position2dInt(), transform.Position2dInt() + gridMover.footprint);
+                Debug.Log("Current Footprint: " +
+                          currentSelection.GetComponent<Placeable>()
+                          .GetFootprintWithRotationStep((currentSelection.GetComponent<GridMover>().rotationStep+1)%4));
+                TileController.Instance.CheckTileOccupancyByPosition(
+                        transform.Position2dInt(),
+                        transform.Position2dInt() + gridMover.footprint);
             }
         }
 
@@ -58,9 +62,6 @@ namespace Kyoto
             pivot = transform.Find("Pivot").gameObject;
             cube = transform.Find("Pivot/PositionerCube_01").gameObject;
 
-            // What is going on here?
-            // Debug.Break();
-            // currentTileTransform = transform.parent;
             currentTileTransform = transform;
 
             clickCatcher = ClickCatcher.Instance;

@@ -31,6 +31,7 @@ namespace Kyoto
 
         public Vector3 rotationPoint;
         private float rotationStart;
+        public int rotationStep = 0;
         public Transform pivot;
 
         // What was this about? Creates nasty infinite loop
@@ -148,6 +149,8 @@ namespace Kyoto
                                    Tween.LoopType.None
                                    );
                 }
+
+                rotationStep = (rotationStep+1)%4;
             }
         }
 
