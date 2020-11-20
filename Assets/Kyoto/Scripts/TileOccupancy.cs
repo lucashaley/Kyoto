@@ -13,6 +13,7 @@ namespace Kyoto
 
         public void SetOccupier(Placeable inPlaceable)
         {
+            Debug.Log("SetOccupier: " + inPlaceable);
             if (inPlaceable)
             {
                 occupier = inPlaceable;

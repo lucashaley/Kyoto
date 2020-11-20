@@ -25,29 +25,20 @@ namespace Kyoto
 
         public Tile GetTile(Vector2Int inPosition)
         {
-            return tiles[inPosition.x, inPosition.y];
+            try
+            {
+                return tiles[inPosition.x, inPosition.y];
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public void SetTileOccupancy(Vector2Int inPosition, Placeable inPlaceable)
         {
-            // GetTile(inPosition).GetComponent<TileOccupancy>().occupier = inPlaceable;
-
-            // if (inPlaceable)
-            // {
-                // foreach (Vector2Int v in inPlaceable)
-                // {
-                //     if (inPlaceable)
-                //     {
-                //         Debug.Log("SetTileOccupancy: " + v, inPlaceable);
-                //     } else {
-                //         Debug.Log("SetTileOccupancy: " + v);
-                //     }
-                //
-                //     GetTile(v).GetComponent<TileOccupancy>().occupier = inPlaceable;
-                // }
-            // }
-
-            GetTile(inPosition).GetComponent<TileOccupancy>().SetOccupier(inPlaceable);
+            // check if tile is null
+            GetTile(inPosition)?.GetComponent<TileOccupancy>().SetOccupier(inPlaceable);
         }
 
         // this is the prototype relative version -- still needed?
@@ -86,11 +77,14 @@ namespace Kyoto
                 for (int y = 0; y <= Mathf.Abs(iterator.y); y++)
                 {
                     Tile currentTile = GetTile(new Vector2Int(root.x + x, root.y + y));
-                    Debug.Log("Checking tile: " + currentTile.gameObject.name, currentTile.gameObject);
-                    TileOccupancy currentTileOccupancy = currentTile.GetComponent<TileOccupancy>();
-                    if (currentTileOccupancy.occupier != placeable && currentTileOccupancy.IsOccupied())
+                    if (currentTile != null)
                     {
-                        return true;
+                        Debug.Log("Checking tile: " + currentTile.gameObject.name, currentTile.gameObject);
+                        TileOccupancy currentTileOccupancy = currentTile.GetComponent<TileOccupancy>();
+                        if (currentTileOccupancy.occupier != placeable && currentTileOccupancy.IsOccupied())
+                        {
+                            return true;
+                        }
                     }
                 }
             }

@@ -43,7 +43,13 @@ namespace Kyoto
             rend = GetComponentInChildren<Renderer>();
             // rotationPoint = transform.position + (footprint.Vector3NoY()/2);
             // rotationPoint = footprint.Vector3NoY() * 0.5f;
-            rotationPoint = new Vector3(0.5f, 0f, 0.5f);
+            if ((footprint.x + footprint.y)%2 == 1)
+            {
+                rotationPoint = new Vector3(0.5f, 0f, 0.5f);
+            } else {
+                rotationPoint = new Vector3(footprint.x * 0.5f, 0f, footprint.y * 0.5f);
+            }
+            // rotationPoint = new Vector3(0.5f, 0f, 0.5f);
             pivot = transform.Find("Pivot");
 
             if (usePivotOffset)
@@ -52,8 +58,10 @@ namespace Kyoto
 
                 Transform[] childrenTransforms = pivot.GetComponentsInChildren<Transform>();
                 foreach (Transform t in childrenTransforms)
-                    t.localPosition = new Vector3(-0.5f, 0f, -0.5f);
-                pivot.localPosition = new Vector3(0.5f, 0f, 0.5f);
+                    // t.localPosition = new Vector3(-0.5f, 0f, -0.5f);
+                    t.localPosition = rotationPoint * -1f;
+                // pivot.localPosition = new Vector3(0.5f, 0f, 0.5f);
+                pivot.localPosition = rotationPoint;
             }
         }
 

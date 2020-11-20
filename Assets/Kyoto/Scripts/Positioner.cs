@@ -31,21 +31,12 @@ namespace Kyoto
 
         void Rotate()
         {
-            // RERACTOR do we still need this?
             Debug.Log("ROTATE start");
-            // Debug.Break();
-            // Debug.Log(gridMover.footprint.x + gridMover.footprint.y);
-            if ((gridMover.footprint.x + gridMover.footprint.y)%2 == 1)
-            {
-                // the result is odd
-                Debug.Log("Oddness!");
 
-                // Check around
-                // rotatePositionerEvent.Invoke();
-                rotateToPositionerEvent.Invoke(Vector2Int.one);
+            // not sure if we still need to check for Oddness
+            // if ((gridMover.footprint.x + gridMover.footprint.y)%2 == 1)
+            // {
 
-                // Debug.Log("Rotate footprint: " + transform.Position2dInt().Rotate90CW(gridMover.footprint));
-                // Debug.Log(TileController.Instance.CheckTileOccupancy(transform.Position2dInt(), gridMover.footprint));
                 Debug.Log("Next Footprint: " +
                           currentSelection.GetComponent<Placeable>()
                           .GetFootprintWithRotationStep((currentSelection.GetComponent<GridMover>().rotationStep+1)%4));
@@ -55,9 +46,10 @@ namespace Kyoto
                         (currentSelection.GetComponent<GridMover>().rotationStep+1)%4);
                 bool occupied = TileController.Instance.CheckTileOccupancyByPosition(start, end, currentSelection.GetComponent<Placeable>());
                 Debug.Log("Occupied: " + occupied);
-            }
 
-            rotatePositionerEvent.Invoke();
+                if (!occupied) rotatePositionerEvent.Invoke();
+            // }
+
             Debug.Log("\n\n");
         }
 

@@ -33,6 +33,7 @@ namespace Kyoto
 
         void Awake()
         {
+            // Debug.Log("Tile: Awake");
             // refactor
             // viewState = GameObject.Find("GameController").GetComponent<ViewStateController>();
             tileCollider = GetComponent<BoxCollider>();

@@ -34,6 +34,9 @@ namespace Kyoto
 
             positioner = Positioner.Instance;
             positioner.placeableEvent.AddListener(this.Deselect);
+
+            // TileController.Instance.SetTileOccupancy(transform.Position2dInt(), this);
+            SetOccupancy(true);
         }
 
         /// <summary>
