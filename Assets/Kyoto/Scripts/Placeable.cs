@@ -137,6 +137,8 @@ namespace Kyoto
         public (Vector2Int start, Vector2Int end) GetFootprintWithRotationStep(int step)
         {
             Vector2Int end = Vector2Int.zero;
+            // REFACTOR should we not subtract 1? We'd have to change
+            // TileController.CheckTileOccupancyByPosition to < instead of <=
             Vector2Int adjustedFootprint = footprint - Vector2Int.one;
             Debug.Log("adjustedFootprint: " + adjustedFootprint);
             switch (step)

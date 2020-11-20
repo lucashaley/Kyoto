@@ -46,13 +46,19 @@ namespace Kyoto
 
                 // Debug.Log("Rotate footprint: " + transform.Position2dInt().Rotate90CW(gridMover.footprint));
                 // Debug.Log(TileController.Instance.CheckTileOccupancy(transform.Position2dInt(), gridMover.footprint));
-                Debug.Log("Current Footprint: " +
+                Debug.Log("Next Footprint: " +
                           currentSelection.GetComponent<Placeable>()
                           .GetFootprintWithRotationStep((currentSelection.GetComponent<GridMover>().rotationStep+1)%4));
-                TileController.Instance.CheckTileOccupancyByPosition(
-                        transform.Position2dInt(),
-                        transform.Position2dInt() + gridMover.footprint);
+                Vector2Int start, end;
+                (start, end) = currentSelection.GetComponent<Placeable>()
+                    .GetFootprintWithRotationStep(
+                        (currentSelection.GetComponent<GridMover>().rotationStep+1)%4);
+                bool occupied = TileController.Instance.CheckTileOccupancyByPosition(start, end, currentSelection.GetComponent<Placeable>());
+                Debug.Log("Occupied: " + occupied);
             }
+
+            rotatePositionerEvent.Invoke();
+            Debug.Log("\n\n");
         }
 
         void Awake()
@@ -129,7 +135,7 @@ namespace Kyoto
                 case Vector3 v when v == Vector3.up:
                     Rotate();
                     // rotatePositionerEvent.Invoke(90);
-                    rotatePositionerEvent.Invoke();
+                    // rotatePositionerEvent.Invoke();
                     break;
                 case Vector3 v when v == Vector3.left || v == Vector3.back:
                     isMoving = true;
