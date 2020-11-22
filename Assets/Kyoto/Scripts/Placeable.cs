@@ -17,7 +17,7 @@ namespace Kyoto
         public Vector2Int footprint = Vector2Int.one;
         public Vector3Int volume = Vector3Int.one;
 
-        private GameObject model;
+        private GameObject pivot;
 
         private GameObject tileCatch;
         private GameObject geoCatch;
@@ -27,7 +27,7 @@ namespace Kyoto
         void Awake()
         {
             // Just added the "Geometry" subonbject, messed things up
-            model = transform.Find("Pivot").gameObject;
+            pivot = transform.Find("Pivot").gameObject;
 
             CreateTileCatch();
             CreateGeoCatch();
@@ -35,7 +35,6 @@ namespace Kyoto
             positioner = Positioner.Instance;
             positioner.placeableEvent.AddListener(this.Deselect);
 
-            // TileController.Instance.SetTileOccupancy(transform.Position2dInt(), this);
             SetOccupancy(true);
         }
 
@@ -118,7 +117,8 @@ namespace Kyoto
             // Create the collider dynamically on runtime. So it doesn't clutter up the inspector.
             tileCatch = new GameObject("TileCatch");
             tileCatch.layer = 8;
-            tileCatch.transform.SetParent(transform, false);
+            // REFACTOR: this assumes the model is the first child.
+            tileCatch.transform.SetParent(pivot.transform.GetChild(0), false);
             BoxCollider col = tileCatch.AddComponent<BoxCollider>();
             col.size = new Vector3(footprint.x, 0.3f, footprint.y);
             col.center = new Vector3(footprint.x*0.5f, -0.05f, footprint.y*0.5f);
@@ -127,7 +127,8 @@ namespace Kyoto
         private void CreateGeoCatch()
         {
             geoCatch = new GameObject("GeoCatch", typeof(PlaceableGeometry));
-            geoCatch.transform.SetParent(transform, false);
+            // REFACTOR: this assumes the model is the first child.
+            geoCatch.transform.SetParent(pivot.transform.GetChild(0), false);
             MeshCollider geo = geoCatch.AddComponent<MeshCollider>();
             geo.sharedMesh = gameObject.GetComponentInChildren<MeshFilter>().sharedMesh;
         }
@@ -143,7 +144,7 @@ namespace Kyoto
             // REFACTOR should we not subtract 1? We'd have to change
             // TileController.CheckTileOccupancyByPosition to < instead of <=
             Vector2Int adjustedFootprint = footprint - Vector2Int.one;
-            Debug.Log("adjustedFootprint: " + adjustedFootprint);
+            // Debug.Log("adjustedFootprint: " + adjustedFootprint);
             switch (step)
             {
                 case 0:
@@ -163,8 +164,8 @@ namespace Kyoto
                     break;
 
             }
-            Debug.Log("Footprint rotation: " +
-                    GetComponent<GridMover>().pivot.rotation.eulerAngles);
+            // Debug.Log("Footprint rotation: " +
+            //         GetComponent<GridMover>().pivot.rotation.eulerAngles);
             // Keep in mind iterating through this will need to stop before the end.
             return (transform.Position2dInt(), end);
         }

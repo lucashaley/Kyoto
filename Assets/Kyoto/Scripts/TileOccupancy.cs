@@ -13,7 +13,7 @@ namespace Kyoto
 
         public void SetOccupier(Placeable inPlaceable)
         {
-            Debug.Log("SetOccupier: " + inPlaceable);
+            // Debug.Log("SetOccupier: " + inPlaceable);
             if (inPlaceable)
             {
                 occupier = inPlaceable;
@@ -26,7 +26,7 @@ namespace Kyoto
 
         public bool IsOccupied(Placeable placeable = null)
         {
-            Debug.Log("IsOccupied: " + transform.Position2dInt() + ", " + occupier + ", " + (occupier != null), this);
+            // Debug.Log("IsOccupied: " + transform.Position2dInt() + ", " + occupier + ", " + (occupier != null), this);
             return (occupier != null || occupier != placeable);
         }
     }

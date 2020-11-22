@@ -44,7 +44,7 @@ namespace Kyoto
         // this is the prototype relative version -- still needed?
         public bool CheckTileOccupancy(Vector2Int origin, Vector2Int footprint)
         {
-            Debug.Log("CheckTileOccupancy: " + origin + " and " + footprint);
+            // Debug.Log("CheckTileOccupancy: " + origin + " and " + footprint);
             for (int x = 0; x < footprint.x; x++)
             {
                 for (int y = 0; y < footprint.y; y++)
@@ -70,7 +70,7 @@ namespace Kyoto
                 root = end;
             }
             Vector2Int tileIterator = end - start;
-            Debug.Log("Iterator: " + iterator);
+            // Debug.Log("Iterator: " + iterator);
 
             for (int x = 0; x <= Mathf.Abs(iterator.x); x++)
             {
@@ -79,7 +79,7 @@ namespace Kyoto
                     Tile currentTile = GetTile(new Vector2Int(root.x + x, root.y + y));
                     if (currentTile != null)
                     {
-                        Debug.Log("Checking tile: " + currentTile.gameObject.name, currentTile.gameObject);
+                        // Debug.Log("Checking tile: " + currentTile.gameObject.name, currentTile.gameObject);
                         TileOccupancy currentTileOccupancy = currentTile.GetComponent<TileOccupancy>();
                         if (currentTileOccupancy.occupier != placeable && currentTileOccupancy.IsOccupied())
                         {

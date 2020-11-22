@@ -33,24 +33,19 @@ namespace Kyoto
         {
             Debug.Log("ROTATE start");
 
-            // not sure if we still need to check for Oddness
-            // if ((gridMover.footprint.x + gridMover.footprint.y)%2 == 1)
-            // {
+            // Debug.Log("Next Footprint: " +
+            //           currentSelection.GetComponent<Placeable>()
+            //           .GetFootprintWithRotationStep((currentSelection.GetComponent<GridMover>().rotationStep+1)%4));
+            Vector2Int start, end;
+            (start, end) = currentSelection.GetComponent<Placeable>()
+                .GetFootprintWithRotationStep(
+                    (currentSelection.GetComponent<GridMover>().rotationStep+1)%4);
+            bool occupied = TileController.Instance.CheckTileOccupancyByPosition(start, end, currentSelection.GetComponent<Placeable>());
+            // Debug.Log("Occupied: " + occupied);
 
-                Debug.Log("Next Footprint: " +
-                          currentSelection.GetComponent<Placeable>()
-                          .GetFootprintWithRotationStep((currentSelection.GetComponent<GridMover>().rotationStep+1)%4));
-                Vector2Int start, end;
-                (start, end) = currentSelection.GetComponent<Placeable>()
-                    .GetFootprintWithRotationStep(
-                        (currentSelection.GetComponent<GridMover>().rotationStep+1)%4);
-                bool occupied = TileController.Instance.CheckTileOccupancyByPosition(start, end, currentSelection.GetComponent<Placeable>());
-                Debug.Log("Occupied: " + occupied);
+            if (!occupied) rotatePositionerEvent.Invoke();
 
-                if (!occupied) rotatePositionerEvent.Invoke();
-            // }
-
-            Debug.Log("\n\n");
+            // Debug.Log("\n\n");
         }
 
         void Awake()
@@ -72,7 +67,7 @@ namespace Kyoto
             // Register to move itself
             movePositionerEvent.AddListener(gridMover.MoveToInt);
             // rotatePositionerEvent.AddListener(geo.GetComponent<GridMover>().RotateByInt);
-            // rotatePositionerEvent.AddListener(gridMover.RotateByInt);
+            rotatePositionerEvent.AddListener(gridMover.RotateStep);
         }
 
         void OnDisable()
@@ -91,7 +86,16 @@ namespace Kyoto
             }
 
             SetVolume(placeable.volume);
-            gridMover.footprint = placeable.GetComponent<GridMover>().footprint;
+
+            gridMover.footprint = placeable.footprint;
+            gridMover.SetPivot();
+            Debug.Log("Positioner: " + pivot.transform.localEulerAngles);
+            Debug.Log("Placeable: " + placeable.transform.Find("Pivot").transform.localEulerAngles);
+            pivot.transform.localEulerAngles = placeable.transform.Find("Pivot").transform.localEulerAngles;
+            Debug.Log("Positioner: " + pivot.transform.localEulerAngles);
+            // Debug.Break();
+
+            // gridMover.footprint = placeable.GetComponent<GridMover>().footprint;
             transform.position = placeable.transform.position;
             currentSelection = placeable.gameObject;
             currentTileTransform = TransformFromRaycast();
@@ -102,9 +106,6 @@ namespace Kyoto
         public void SetVolume(Vector3Int vol)
         {
             cube.transform.localScale = vol;
-            // cube.transform.localPosition = (Vector3)vol/2;
-            // cube.transform.localPosition =
-
             GetComponent<BoxCollider>().size = vol;
             GetComponent<BoxCollider>().center = (Vector3)vol/2;
         }
@@ -126,10 +127,10 @@ namespace Kyoto
             {
                 case Vector3 v when v == Vector3.up:
                     Rotate();
-                    // rotatePositionerEvent.Invoke(90);
-                    // rotatePositionerEvent.Invoke();
                     break;
-                case Vector3 v when v == Vector3.left || v == Vector3.back:
+                case Vector3 v when v == Vector3.down:
+                    break;
+                default:
                     isMoving = true;
                     break;
             }

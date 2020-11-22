@@ -9,6 +9,7 @@ namespace Kyoto
         // When clicked, turn on placer
         void OnMouseUp()
         {
+            // REFACTOR to use Events
             GetComponentInParent<Placeable>().Select();
         }
     }
