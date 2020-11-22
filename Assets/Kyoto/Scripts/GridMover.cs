@@ -41,30 +41,10 @@ namespace Kyoto
         void Awake()
         {
             rend = GetComponentInChildren<Renderer>();
-            // rotationPoint = transform.position + (footprint.Vector3NoY()/2);
-            // rotationPoint = footprint.Vector3NoY() * 0.5f;
-            // if ((footprint.x + footprint.y)%2 == 1)
-            // {
-            //     rotationPoint = new Vector3(0.5f, 0f, 0.5f);
-            // } else {
-            //     rotationPoint = new Vector3(footprint.x * 0.5f, 0f, footprint.y * 0.5f);
-            // }
-            // rotationPoint = new Vector3(0.5f, 0f, 0.5f);
+
             pivot = transform.Find("Pivot");
 
             SetPivot();
-
-            // if (usePivotOffset)
-            // {
-            //     // pivot.Translate(new Vector3(0.5f, 0f, 0.5f));
-            //
-            //     Transform[] childrenTransforms = pivot.GetComponentsInChildren<Transform>();
-            //     foreach (Transform t in childrenTransforms)
-            //         // t.localPosition = new Vector3(-0.5f, 0f, -0.5f);
-            //         t.localPosition = rotationPoint * -1f;
-            //     // pivot.localPosition = new Vector3(0.5f, 0f, 0.5f);
-            //     pivot.localPosition = rotationPoint;
-            // }
         }
 
         public void SetPivot()
@@ -88,7 +68,10 @@ namespace Kyoto
         void StartTween()
         {
             isTweening = true;
-            doneMoving.Invoke(false);
+
+            // This was not working here, because by the time we reached this
+            // function the footprint values had already changed.
+            // doneMoving.Invoke(false);
         }
 
         void EndTween()
@@ -96,6 +79,8 @@ namespace Kyoto
             isTweening = false;
 
             // REFACTOR this to one Transform extension?
+            // Here's where we clamp the position and rotation to make up for
+            // weird tween artifacts
             transform.position = transform.position.RoundedInt();
             transform.localScale = Vector3.one;
 

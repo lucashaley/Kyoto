@@ -108,7 +108,7 @@ namespace Kyoto
                 for (int y = 0; y <= Mathf.Abs(iterator.y); y++)
                 {
                     Tile currentTile = GetTile(new Vector2Int(root.x + x, root.y + y));
-                    Debug.Log("Setting tile: " + currentTile.gameObject.name, currentTile.gameObject);
+                    // Debug.Log("Setting tile: " + currentTile.gameObject.name, currentTile.gameObject);
                     currentTile?.GetComponent<TileOccupancy>().SetOccupier(placeable);
                 }
             }

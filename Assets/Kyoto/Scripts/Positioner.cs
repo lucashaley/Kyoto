@@ -29,6 +29,10 @@ namespace Kyoto
         public LayerMask mask;
         public Transform currentTileTransform;
 
+        /// <summary>
+        /// This is presumably where we check to see if the rotate will cause an
+        /// invalid move.
+        /// </summary>
         void Rotate()
         {
             Vector2Int start, end;
@@ -38,6 +42,7 @@ namespace Kyoto
             bool occupied = TileController.Instance.CheckTileOccupancyByPosition(start, end, currentSelection.GetComponent<Placeable>());
             Debug.Log("Occupied: " + occupied);
 
+            // we have a legal move, so go ahead and rotate
             if (!occupied) rotatePositionerEvent.Invoke();
         }
 

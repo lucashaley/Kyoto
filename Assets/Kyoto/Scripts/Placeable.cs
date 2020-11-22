@@ -44,13 +44,13 @@ namespace Kyoto
         void OnEnable()
         {
             GetComponent<GridMover>().doneMoving.AddListener(SetOccupancy);
-            GetComponent<GridMover>().doneMoving.AddListener(ClampTransform);
+            // GetComponent<GridMover>().doneMoving.AddListener(ClampTransform);
         }
 
         void OnDisable()
         {
             GetComponent<GridMover>().doneMoving.RemoveListener(SetOccupancy);
-            GetComponent<GridMover>().doneMoving.RemoveListener(ClampTransform);
+            // GetComponent<GridMover>().doneMoving.RemoveListener(ClampTransform);
         }
 
         public void Select()
@@ -59,21 +59,37 @@ namespace Kyoto
             positioner.Activate(this);
 
             positioner.movePositionerEvent.AddListener(Place);
-            positioner.rotatePositionerEvent.AddListener(GetComponent<GridMover>().RotateStep);
+            // Addng a interstitial layer to make sure the occupancy is clear
+            // positioner.rotatePositionerEvent.AddListener(GetComponent<GridMover>().RotateStep);
+            positioner.rotatePositionerEvent.AddListener(RotateStep);
         }
 
         public void Deselect()
         {
             positioner.movePositionerEvent.RemoveListener(Place);
-            positioner.rotatePositionerEvent.RemoveListener(GetComponent<GridMover>().RotateStep);
+            // positioner.rotatePositionerEvent.RemoveListener(GetComponent<GridMover>().RotateStep);
+            positioner.rotatePositionerEvent.RemoveListener(RotateStep);
 
             geoCatch.SetActive(true);
         }
 
         public void Place(Vector2Int pos)
         {
-            // REFACTOR: do we still need this level? Can be direct?
+            ClearOccupancy();
+
             GetComponent<GridMover>().MoveToInt(pos);
+        }
+
+        public void RotateStep()
+        {
+            // clear the Occupancy
+            ClearOccupancy();
+
+            // Send the rotate Command
+            GetComponent<GridMover>().RotateStep();
+
+            // set the Occupancy
+            // This is done in a completed callback from the GridMover.
         }
 
         /// <remarks>
@@ -89,16 +105,16 @@ namespace Kyoto
             // }
             Vector2Int start, end = default;
             (start, end) = GetCurrentFootprint();
+
+            Debug.Log("SetOccupancy: " + start + ", " + end);
+
             TileController.Instance.SetTileOccupancyByPosition(start, end, doneMoving ? this : null);
         }
 
-        void ClampTransform(bool doneMoving)
+        void ClearOccupancy()
         {
-            //Moved this to the GridMover
-            // transform.position = transform.position.RoundedInt();
-            // transform.localScale = Vector3.one;
+            SetOccupancy(false);
         }
-
 
         public IEnumerator<Vector2Int> GetEnumerator()
         {
