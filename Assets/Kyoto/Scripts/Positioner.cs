@@ -31,21 +31,14 @@ namespace Kyoto
 
         void Rotate()
         {
-            Debug.Log("ROTATE start");
-
-            // Debug.Log("Next Footprint: " +
-            //           currentSelection.GetComponent<Placeable>()
-            //           .GetFootprintWithRotationStep((currentSelection.GetComponent<GridMover>().rotationStep+1)%4));
             Vector2Int start, end;
             (start, end) = currentSelection.GetComponent<Placeable>()
                 .GetFootprintWithRotationStep(
                     (currentSelection.GetComponent<GridMover>().rotationStep+1)%4);
             bool occupied = TileController.Instance.CheckTileOccupancyByPosition(start, end, currentSelection.GetComponent<Placeable>());
-            // Debug.Log("Occupied: " + occupied);
+            Debug.Log("Occupied: " + occupied);
 
             if (!occupied) rotatePositionerEvent.Invoke();
-
-            // Debug.Log("\n\n");
         }
 
         void Awake()
@@ -89,13 +82,8 @@ namespace Kyoto
 
             gridMover.footprint = placeable.footprint;
             gridMover.SetPivot();
-            Debug.Log("Positioner: " + pivot.transform.localEulerAngles);
-            Debug.Log("Placeable: " + placeable.transform.Find("Pivot").transform.localEulerAngles);
             pivot.transform.localEulerAngles = placeable.transform.Find("Pivot").transform.localEulerAngles;
-            Debug.Log("Positioner: " + pivot.transform.localEulerAngles);
-            // Debug.Break();
 
-            // gridMover.footprint = placeable.GetComponent<GridMover>().footprint;
             transform.position = placeable.transform.position;
             currentSelection = placeable.gameObject;
             currentTileTransform = TransformFromRaycast();
@@ -120,7 +108,6 @@ namespace Kyoto
 
         void OnMouseDown()
         {
-            Debug.Log("OnMouseDown");
             currentTileTransform = TransformFromRaycast();
 
             switch (CollisionNormal())

@@ -81,11 +81,15 @@ namespace Kyoto
         /// </remarks>
         void SetOccupancy(bool doneMoving)
         {
-            foreach (Vector2Int v in this)
-            {
-                // Debug.Log("Occupancy: " + v);
-                TileController.Instance.SetTileOccupancy(v, doneMoving ? this : null);
-            }
+            Debug.Log("DoneMoving: SetOccupancy", this);
+            // foreach (Vector2Int v in this)
+            // {
+            //     // Debug.Log("Occupancy: " + v);
+            //     TileController.Instance.SetTileOccupancy(v, doneMoving ? this : null);
+            // }
+            Vector2Int start, end = default;
+            (start, end) = GetCurrentFootprint();
+            TileController.Instance.SetTileOccupancyByPosition(start, end, doneMoving ? this : null);
         }
 
         void ClampTransform(bool doneMoving)

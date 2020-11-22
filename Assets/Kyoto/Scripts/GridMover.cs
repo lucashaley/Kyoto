@@ -101,6 +101,7 @@ namespace Kyoto
 
             pivot.localEulerAngles = Vector3Int.FloorToInt(pivot.localEulerAngles);
 
+            Debug.Log("Invoking doneMoving");
             doneMoving.Invoke(true);
         }
 

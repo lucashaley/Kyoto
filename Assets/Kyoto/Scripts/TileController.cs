@@ -90,5 +90,28 @@ namespace Kyoto
             }
             return false;
         }
+
+        public void SetTileOccupancyByPosition(Vector2Int start, Vector2Int end, Placeable placeable = null)
+        {
+            Vector2Int iterator = end - start;
+            Vector2Int root = start;
+            if (iterator.x < 0 || iterator.y < 0)
+            {
+                iterator = start - end;
+                root = end;
+            }
+            Vector2Int tileIterator = end - start;
+            // Debug.Log("Iterator: " + iterator);
+
+            for (int x = 0; x <= Mathf.Abs(iterator.x); x++)
+            {
+                for (int y = 0; y <= Mathf.Abs(iterator.y); y++)
+                {
+                    Tile currentTile = GetTile(new Vector2Int(root.x + x, root.y + y));
+                    Debug.Log("Setting tile: " + currentTile.gameObject.name, currentTile.gameObject);
+                    currentTile?.GetComponent<TileOccupancy>().SetOccupier(placeable);
+                }
+            }
+        }
     }
 }
