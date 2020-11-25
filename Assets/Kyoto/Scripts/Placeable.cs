@@ -14,10 +14,16 @@ namespace Kyoto
     /// </remarks>
     public class Placeable : MonoBehaviour, IEnumerable<Vector2Int>
     {
-        public Vector2Int footprint = Vector2Int.one;
+        public Vector2Int footprint
+        {
+            get
+            {
+                return volume.Vector2IntNoY();
+            }
+        }
         public Vector3Int volume = Vector3Int.one;
 
-        private GameObject pivot;
+        private Transform pivot;
 
         private GameObject tileCatch;
         private GameObject geoCatch;
@@ -26,14 +32,12 @@ namespace Kyoto
 
         void Awake()
         {
-            // Just added the "Geometry" subonbject, messed things up
-            pivot = transform.Find("Pivot").gameObject;
+            pivot = transform.Find("Pivot");
+            positioner = Positioner.Instance;
+            // positioner.placeableEvent.AddListener(this.Deselect);
 
             CreateTileCatch();
             CreateGeoCatch();
-
-            positioner = Positioner.Instance;
-            positioner.placeableEvent.AddListener(this.Deselect);
 
             SetOccupancy(true);
         }
@@ -44,29 +48,34 @@ namespace Kyoto
         void OnEnable()
         {
             GetComponent<GridMover>().doneMoving.AddListener(SetOccupancy);
-            // GetComponent<GridMover>().doneMoving.AddListener(ClampTransform);
         }
 
         void OnDisable()
         {
             GetComponent<GridMover>().doneMoving.RemoveListener(SetOccupancy);
-            // GetComponent<GridMover>().doneMoving.RemoveListener(ClampTransform);
         }
 
+        /// <summary>
+        /// This gets called from the Geometry collider MouseDown
+        /// It makes this Placeable ready to be moved by the Positioner
+        /// </summary>
         public void Select()
         {
-            geoCatch.SetActive(false);
-            positioner.Activate(this);
+            // Audio cue
 
-            positioner.movePositionerEvent.AddListener(Place);
-            // Addng a interstitial layer to make sure the occupancy is clear
-            // positioner.rotatePositionerEvent.AddListener(GetComponent<GridMover>().RotateStep);
+            // Turn geometry catch off
+            geoCatch.SetActive(false);
+
+            // Turn on Positioner, and assign it to this
+            positioner.Activate(this);
+            // Register the Place method for the Positioner
+            positioner.RegisterMoveEvent(Place);
             positioner.rotatePositionerEvent.AddListener(RotateStep);
         }
 
         public void Deselect()
         {
-            positioner.movePositionerEvent.RemoveListener(Place);
+            positioner.DeregisterMoveEvent(Place);
             // positioner.rotatePositionerEvent.RemoveListener(GetComponent<GridMover>().RotateStep);
             positioner.rotatePositionerEvent.RemoveListener(RotateStep);
 
@@ -138,7 +147,7 @@ namespace Kyoto
             tileCatch = new GameObject("TileCatch");
             tileCatch.layer = 8;
             // REFACTOR: this assumes the model is the first child.
-            tileCatch.transform.SetParent(pivot.transform.GetChild(0), false);
+            tileCatch.transform.SetParent(pivot.GetChild(0), false);
             BoxCollider col = tileCatch.AddComponent<BoxCollider>();
             col.size = new Vector3(footprint.x, 0.3f, footprint.y);
             col.center = new Vector3(footprint.x*0.5f, -0.05f, footprint.y*0.5f);
@@ -148,7 +157,7 @@ namespace Kyoto
         {
             geoCatch = new GameObject("GeoCatch", typeof(PlaceableGeometry));
             // REFACTOR: this assumes the model is the first child.
-            geoCatch.transform.SetParent(pivot.transform.GetChild(0), false);
+            geoCatch.transform.SetParent(pivot.GetChild(0), false);
             MeshCollider geo = geoCatch.AddComponent<MeshCollider>();
             geo.sharedMesh = gameObject.GetComponentInChildren<MeshFilter>().sharedMesh;
         }

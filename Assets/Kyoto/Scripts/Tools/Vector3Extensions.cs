@@ -83,5 +83,14 @@ namespace Kyoto
                 Mathf.RoundToInt(v.z)
             );
         }
+
+        public static Vector2Int Vector2IntNoY(this Vector3Int v)
+        {
+            return new Vector2Int
+            (
+                v.x,
+                v.z
+            );
+        }
     }
 }
