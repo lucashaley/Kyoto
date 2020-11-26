@@ -11,24 +11,25 @@ namespace Kyoto
     {
         public Transform pivot;
         public Transform cube;
-        // public Placeable currentPlaceable;
+
         public Placeable currentNonMoverPlaceable;
         public ClickCatcher clickCatcher;
-        // public GridMover gridMover;
 
-        private Vector2IntEvent movePositionerEvent;
-        public UnityEvent rotatePositionerEvent;
+        // private Vector2IntEvent movePositionerEvent;
+        // public UnityEvent rotatePositionerEvent;
 
+        [Header("State Flags")]
         public bool isMoving;
         private bool isTweening;
         public bool fancy = true;
-        // public int rotationStep = 0;
+
         private Vector3 rotationPoint = Vector3.one;
         public bool usePivotOffset = true;
 
         private Renderer rend;
         public LayerMask mask;
         public Transform currentTileTransform;
+        public Tile currentPivotTile;
         public FloatVariable fadeValue;
         public AnimationCurveVariable curve;
 
@@ -40,7 +41,7 @@ namespace Kyoto
         void Rotate()
         {
             Vector2Int start, end;
-            (start, end) = GetFootprintWithRotationStep(
+            (start, end) = currentNonMoverPlaceable.GetFootprintWithRotationStep(
                     (currentNonMoverPlaceable.rotationStep+1)%4);
             Debug.Log("Start: " + start);
             Debug.Log("End: " + end);
@@ -89,8 +90,12 @@ namespace Kyoto
 
         void MoveTo(Vector2Int destination)
         {
+            Debug.Log("MoveTo: " + destination);
+
             if (!isTweening)
             {
+                // SetOccupancy(false);
+
                 Tween.Position(transform,
                               destination.Vector3NoY(),
                               fadeValue.Value,
@@ -112,11 +117,13 @@ namespace Kyoto
 
         private void StartTween()
         {
+            currentNonMoverPlaceable.SetOccupancy(false);
             isTweening = true;
         }
         private void EndTween()
         {
             isTweening = false;
+            currentNonMoverPlaceable.SetOccupancy(true);
         }
 
         void Awake()
@@ -130,10 +137,6 @@ namespace Kyoto
 
             clickCatcher = ClickCatcher.Instance;
             clickCatcher.positioner = this;
-            // gridMover = GetComponent<GridMover>();
-            // gridMover.AddMover(transform);
-
-            movePositionerEvent = new Vector2IntEvent();
         }
 
         void OnEnable()
@@ -152,16 +155,19 @@ namespace Kyoto
             {
                 RemovePlaceable();
             }
+            currentNonMoverPlaceable = placeable;
 
-            Debug.Log("Move Positioner to Placeable");
-            transform.position = placeable.transform.position;
+            pivot.localEulerAngles = Vector3.up * 90 * currentNonMoverPlaceable.rotationStep;
+            transform.position = currentNonMoverPlaceable.transform.position;
 
-            AddPlaceable(placeable);
+            AddPlaceable(currentNonMoverPlaceable);
             SetPivot();
 
             currentTileTransform = TransformFromRaycast();
             GetComponent<BoxCollider>().enabled = true;
             rend.enabled = true;
+
+            currentPivotTile = TileController.Instance.GetTile(transform.Position2dInt());
         }
 
         public void Deactivate()
@@ -229,15 +235,13 @@ namespace Kyoto
         {
             // Check to see which tile we're in
             Transform newTile = TransformFromRaycast();
+            // Tile tile = TileFromRaycast();
+            // Debug.Log("Tile: " + tile.gameObject.name, tile);
 
             // If we're still moving and in a new tile, move the positioner.
             if (isMoving && newTile != currentTileTransform)
             {
-                // this is the old method with a GridMover.
-                // movePositionerEvent.Invoke(newTile.Position2dInt());
-
-                // this is the new method using just the positioner.
-                MoveTo(currentTileTransform.Position2dInt());
+                MoveTo(newTile.Position2dInt());
 
                 currentTileTransform = newTile;
             }
@@ -249,8 +253,9 @@ namespace Kyoto
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
+            LayerMask invertMask = ~(1 << mask);
 
-            if (Physics.Raycast(ray, out hit, 100, mask))
+            if (Physics.Raycast(ray, out hit, 100, invertMask))
             {
                 Tile tile;
                 if (hit.transform.gameObject.TryGetComponent<Tile>(out tile))
@@ -262,6 +267,25 @@ namespace Kyoto
             } else {
                 return currentTileTransform;
             }
+        }
+
+        private Tile TileFromRaycast()
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit, 100, mask.value))
+            {
+                Tile tile;
+                Debug.Log("Hit: " + hit.transform.gameObject.name);
+                if (hit.transform.gameObject.TryGetComponent<Tile>(out tile))
+                {
+                    return tile;
+                } else {
+                    return null;
+                }
+            }
+            return null;
         }
 
         private Vector3 CollisionNormal()
@@ -282,6 +306,7 @@ namespace Kyoto
             currentNonMoverPlaceable = placeable;
             currentNonMoverPlaceable.transform.SetParent(pivot);
             currentNonMoverPlaceable.transform.localPosition = Vector3.zero;
+            currentNonMoverPlaceable.SetTileCatch(false);
 
             SetVolume(placeable.volume);
         }
@@ -299,58 +324,6 @@ namespace Kyoto
             GetComponent<BoxCollider>().center = (Vector3)vol/2;
         }
 
-        public void SetOccupancy(bool isOccupied)
-        {
-            Debug.Log("Positioner.SetOccupancy", this);
-            Vector2Int start, end = default;
-
-            (start, end) = GetCurrentFootprint();
-
-            Debug.Log("Positioner.SetOccupancy: " + start + ", " + end);
-            TileController.Instance
-                          .SetTileOccupancyByPosition
-                            (
-                                start,
-                                end,
-                                isOccupied ? currentNonMoverPlaceable : null
-                            );
-        }
-
-        public (Vector2Int start, Vector2Int end) GetFootprintWithRotationStep(int step)
-        {
-            Vector2Int end = Vector2Int.zero;
-            // REFACTOR should we not subtract 1? We'd have to change
-            // TileController.CheckTileOccupancyByPosition to < instead of <=
-            Vector2Int adjustedFootprint = currentNonMoverPlaceable.footprint - Vector2Int.one;
-            // Debug.Log("adjustedFootprint: " + adjustedFootprint);
-            switch (step)
-            {
-                case 0:
-                    end = transform.Position2dInt() + adjustedFootprint;
-                    break;
-
-                case 1:
-                    end = transform.Position2dInt() - adjustedFootprint.Transpose();
-                    break;
-
-                case 2:
-                    end = transform.Position2dInt() - adjustedFootprint;
-                    break;
-
-                case 3:
-                    end = transform.Position2dInt() + adjustedFootprint.Transpose();
-                    break;
-
-            }
-
-            return (transform.Position2dInt(), end);
-        }
-
-        public (Vector2Int start, Vector2Int end) GetCurrentFootprint()
-        {
-            return GetFootprintWithRotationStep(currentNonMoverPlaceable.rotationStep);
-        }
-
         /// ACCESSORS ///
 
         /// <summary>
@@ -358,11 +331,11 @@ namespace Kyoto
         /// </summary>
         public void RegisterMoveEvent(UnityAction<Vector2Int> call)
         {
-            movePositionerEvent.AddListener(call);
+            // movePositionerEvent.AddListener(call);
         }
         public void DeregisterMoveEvent(UnityAction<Vector2Int> call)
         {
-            movePositionerEvent.RemoveListener(call);
+            // movePositionerEvent.RemoveListener(call);
         }
 
     }

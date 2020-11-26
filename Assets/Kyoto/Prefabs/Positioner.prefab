@@ -81,26 +81,18 @@ MonoBehaviour:
   _dontDestroyOnLoad: 0
   pivot: {fileID: 0}
   cube: {fileID: 0}
-  currentSelection: {fileID: 0}
+  currentNonMoverPlaceable: {fileID: 0}
   clickCatcher: {fileID: 0}
-  gridMover: {fileID: 0}
-  movePositionerEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  rotateToPositionerEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  rotatePositionerEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  placeableEvent:
-    m_PersistentCalls:
-      m_Calls: []
   isMoving: 0
+  fancy: 1
+  usePivotOffset: 1
   mask:
     serializedVersion: 2
     m_Bits: 256
   currentTileTransform: {fileID: 0}
+  currentPivotTile: {fileID: 0}
+  fadeValue: {fileID: 0}
+  curve: {fileID: 0}
 --- !u!114 &9028964182124949037
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -113,6 +105,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cde13c74e4a0c41f096bb55f1d35510a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  placeable: {fileID: 0}
+  movers: []
   footprint: {x: 1, y: 1}
   moveBase: {fileID: 0}
   rotateBase: {fileID: 0}
@@ -126,6 +120,7 @@ MonoBehaviour:
   curve: {fileID: 11400000, guid: 4e9fbd577d75d4b7b8328cf2ee5fef9e, type: 2}
   rend: {fileID: 0}
   rotationPoint: {x: 0, y: 0, z: 0}
+  rotationStep: 0
   pivot: {fileID: 0}
   doneMoving:
     m_PersistentCalls:

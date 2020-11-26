@@ -40,7 +40,7 @@ namespace Kyoto
             CreateTileCatch();
             CreateGeoCatch();
 
-            // SetOccupancy(true);
+            SetOccupancy(true);
         }
 
         /// <summary>
@@ -103,29 +103,26 @@ namespace Kyoto
         //     // This is done in a completed callback from the GridMover.
         // }
         //
-        // /// <remarks>
-        // /// If doneMoving is true, it sends this Placeable.
-        // /// </remarks>
-        // void SetOccupancy(bool doneMoving)
-        // {
-        //     Debug.Log("DoneMoving: SetOccupancy", this);
-        //     // foreach (Vector2Int v in this)
-        //     // {
-        //     //     // Debug.Log("Occupancy: " + v);
-        //     //     TileController.Instance.SetTileOccupancy(v, doneMoving ? this : null);
-        //     // }
-        //     Vector2Int start, end = default;
-        //     (start, end) = GetCurrentFootprint();
-        //
-        //     Debug.Log("SetOccupancy: " + start + ", " + end);
-        //
-        //     TileController.Instance.SetTileOccupancyByPosition(start, end, doneMoving ? this : null);
-        // }
-        //
-        // void ClearOccupancy()
-        // {
-        //     SetOccupancy(false);
-        // }
+        /// <remarks>
+        /// Should this be here or in the Positioner?
+        /// Not working yet!
+        /// </remarks>
+        public void SetOccupancy(bool active)
+        {
+            Debug.Log("Placeable: SetOccupancy", this);
+
+            Vector2Int start, end = default;
+            (start, end) = GetCurrentFootprint();
+
+            Debug.Log("SetOccupancy: " + start + ", " + end);
+
+            TileController.Instance.SetTileOccupancyByPosition(start, end, active ? this : null);
+        }
+
+        public void ClearOccupancy()
+        {
+            SetOccupancy(false);
+        }
 
         public IEnumerator<Vector2Int> GetEnumerator()
         {
@@ -155,6 +152,11 @@ namespace Kyoto
             col.center = new Vector3(footprint.x*0.5f, -0.05f, footprint.y*0.5f);
         }
 
+        public void SetTileCatch(bool active)
+        {
+            tileCatch.SetActive(active);
+        }
+
         private void CreateGeoCatch()
         {
             geoCatch = new GameObject("GeoCatch", typeof(PlaceableGeometry));
@@ -164,41 +166,39 @@ namespace Kyoto
             geo.sharedMesh = gameObject.GetComponentInChildren<MeshFilter>().sharedMesh;
         }
 
-        // public (Vector2Int start, Vector2Int end) GetCurrentFootprint()
-        // {
-        //     return GetFootprintWithRotationStep(GetComponent<GridMover>().rotationStep);
-        // }
-        //
-        // public (Vector2Int start, Vector2Int end) GetFootprintWithRotationStep(int step)
-        // {
-        //     Vector2Int end = Vector2Int.zero;
-        //     // REFACTOR should we not subtract 1? We'd have to change
-        //     // TileController.CheckTileOccupancyByPosition to < instead of <=
-        //     Vector2Int adjustedFootprint = footprint - Vector2Int.one;
-        //     // Debug.Log("adjustedFootprint: " + adjustedFootprint);
-        //     switch (step)
-        //     {
-        //         case 0:
-        //             end = transform.Position2dInt() + adjustedFootprint;
-        //             break;
-        //
-        //         case 1:
-        //             end = transform.Position2dInt() - adjustedFootprint.Transpose();
-        //             break;
-        //
-        //         case 2:
-        //             end = transform.Position2dInt() - adjustedFootprint;
-        //             break;
-        //
-        //         case 3:
-        //             end = transform.Position2dInt() + adjustedFootprint.Transpose();
-        //             break;
-        //
-        //     }
-        //     // Debug.Log("Footprint rotation: " +
-        //     //         GetComponent<GridMover>().pivot.rotation.eulerAngles);
-        //     // Keep in mind iterating through this will need to stop before the end.
-        //     return (transform.Position2dInt(), end);
-        // }
+        public (Vector2Int start, Vector2Int end) GetCurrentFootprint()
+        {
+            return GetFootprintWithRotationStep(rotationStep);
+        }
+
+        public (Vector2Int start, Vector2Int end) GetFootprintWithRotationStep(int step)
+        {
+            Vector2Int end = Vector2Int.zero;
+            // REFACTOR should we not subtract 1? We'd have to change
+            // TileController.CheckTileOccupancyByPosition to < instead of <=
+            Vector2Int adjustedFootprint = footprint - Vector2Int.one;
+
+            switch (step)
+            {
+                case 0:
+                    end = transform.Position2dInt() + adjustedFootprint;
+                    break;
+
+                case 1:
+                    end = transform.Position2dInt() - adjustedFootprint.Transpose();
+                    break;
+
+                case 2:
+                    end = transform.Position2dInt() - adjustedFootprint;
+                    break;
+
+                case 3:
+                    end = transform.Position2dInt() + adjustedFootprint.Transpose();
+                    break;
+
+            }
+
+            return (transform.Position2dInt(), end);
+        }
     }
 }
