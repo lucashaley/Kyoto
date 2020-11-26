@@ -22,6 +22,7 @@ namespace Kyoto
             }
         }
         public Vector3Int volume = Vector3Int.one;
+        public int rotationStep = 0;
 
         private Transform pivot;
 
@@ -39,7 +40,7 @@ namespace Kyoto
             CreateTileCatch();
             CreateGeoCatch();
 
-            SetOccupancy(true);
+            // SetOccupancy(true);
         }
 
         /// <summary>
@@ -47,12 +48,12 @@ namespace Kyoto
         /// </summary>
         void OnEnable()
         {
-            GetComponent<GridMover>().doneMoving.AddListener(SetOccupancy);
+            // GetComponent<GridMover>().doneMoving.AddListener(SetOccupancy);
         }
 
         void OnDisable()
         {
-            GetComponent<GridMover>().doneMoving.RemoveListener(SetOccupancy);
+            // GetComponent<GridMover>().doneMoving.RemoveListener(SetOccupancy);
         }
 
         /// <summary>
@@ -61,6 +62,7 @@ namespace Kyoto
         /// </summary>
         public void Select()
         {
+            Debug.Log("Select: " + gameObject.name);
             // Audio cue
 
             // Turn geometry catch off
@@ -69,61 +71,61 @@ namespace Kyoto
             // Turn on Positioner, and assign it to this
             positioner.Activate(this);
             // Register the Place method for the Positioner
-            positioner.RegisterMoveEvent(Place);
-            positioner.rotatePositionerEvent.AddListener(RotateStep);
+            // positioner.RegisterMoveEvent(Place);
+            // positioner.rotatePositionerEvent.AddListener(RotateStep);
         }
 
         public void Deselect()
         {
-            positioner.DeregisterMoveEvent(Place);
+            // positioner.DeregisterMoveEvent(Place);
             // positioner.rotatePositionerEvent.RemoveListener(GetComponent<GridMover>().RotateStep);
-            positioner.rotatePositionerEvent.RemoveListener(RotateStep);
+            // positioner.rotatePositionerEvent.RemoveListener(RotateStep);
 
             geoCatch.SetActive(true);
         }
 
-        public void Place(Vector2Int pos)
-        {
-            ClearOccupancy();
-
-            GetComponent<GridMover>().MoveToInt(pos);
-        }
-
-        public void RotateStep()
-        {
-            // clear the Occupancy
-            ClearOccupancy();
-
-            // Send the rotate Command
-            GetComponent<GridMover>().RotateStep();
-
-            // set the Occupancy
-            // This is done in a completed callback from the GridMover.
-        }
-
-        /// <remarks>
-        /// If doneMoving is true, it sends this Placeable.
-        /// </remarks>
-        void SetOccupancy(bool doneMoving)
-        {
-            Debug.Log("DoneMoving: SetOccupancy", this);
-            // foreach (Vector2Int v in this)
-            // {
-            //     // Debug.Log("Occupancy: " + v);
-            //     TileController.Instance.SetTileOccupancy(v, doneMoving ? this : null);
-            // }
-            Vector2Int start, end = default;
-            (start, end) = GetCurrentFootprint();
-
-            Debug.Log("SetOccupancy: " + start + ", " + end);
-
-            TileController.Instance.SetTileOccupancyByPosition(start, end, doneMoving ? this : null);
-        }
-
-        void ClearOccupancy()
-        {
-            SetOccupancy(false);
-        }
+        // public void Place(Vector2Int pos)
+        // {
+        //     ClearOccupancy();
+        //
+        //     GetComponent<GridMover>().MoveToInt(pos);
+        // }
+        //
+        // public void RotateStep()
+        // {
+        //     // clear the Occupancy
+        //     ClearOccupancy();
+        //
+        //     // Send the rotate Command
+        //     GetComponent<GridMover>().RotateStep();
+        //
+        //     // set the Occupancy
+        //     // This is done in a completed callback from the GridMover.
+        // }
+        //
+        // /// <remarks>
+        // /// If doneMoving is true, it sends this Placeable.
+        // /// </remarks>
+        // void SetOccupancy(bool doneMoving)
+        // {
+        //     Debug.Log("DoneMoving: SetOccupancy", this);
+        //     // foreach (Vector2Int v in this)
+        //     // {
+        //     //     // Debug.Log("Occupancy: " + v);
+        //     //     TileController.Instance.SetTileOccupancy(v, doneMoving ? this : null);
+        //     // }
+        //     Vector2Int start, end = default;
+        //     (start, end) = GetCurrentFootprint();
+        //
+        //     Debug.Log("SetOccupancy: " + start + ", " + end);
+        //
+        //     TileController.Instance.SetTileOccupancyByPosition(start, end, doneMoving ? this : null);
+        // }
+        //
+        // void ClearOccupancy()
+        // {
+        //     SetOccupancy(false);
+        // }
 
         public IEnumerator<Vector2Int> GetEnumerator()
         {
@@ -162,41 +164,41 @@ namespace Kyoto
             geo.sharedMesh = gameObject.GetComponentInChildren<MeshFilter>().sharedMesh;
         }
 
-        public (Vector2Int start, Vector2Int end) GetCurrentFootprint()
-        {
-            return GetFootprintWithRotationStep(GetComponent<GridMover>().rotationStep);
-        }
-
-        public (Vector2Int start, Vector2Int end) GetFootprintWithRotationStep(int step)
-        {
-            Vector2Int end = Vector2Int.zero;
-            // REFACTOR should we not subtract 1? We'd have to change
-            // TileController.CheckTileOccupancyByPosition to < instead of <=
-            Vector2Int adjustedFootprint = footprint - Vector2Int.one;
-            // Debug.Log("adjustedFootprint: " + adjustedFootprint);
-            switch (step)
-            {
-                case 0:
-                    end = transform.Position2dInt() + adjustedFootprint;
-                    break;
-
-                case 1:
-                    end = transform.Position2dInt() - adjustedFootprint.Transpose();
-                    break;
-
-                case 2:
-                    end = transform.Position2dInt() - adjustedFootprint;
-                    break;
-
-                case 3:
-                    end = transform.Position2dInt() + adjustedFootprint.Transpose();
-                    break;
-
-            }
-            // Debug.Log("Footprint rotation: " +
-            //         GetComponent<GridMover>().pivot.rotation.eulerAngles);
-            // Keep in mind iterating through this will need to stop before the end.
-            return (transform.Position2dInt(), end);
-        }
+        // public (Vector2Int start, Vector2Int end) GetCurrentFootprint()
+        // {
+        //     return GetFootprintWithRotationStep(GetComponent<GridMover>().rotationStep);
+        // }
+        //
+        // public (Vector2Int start, Vector2Int end) GetFootprintWithRotationStep(int step)
+        // {
+        //     Vector2Int end = Vector2Int.zero;
+        //     // REFACTOR should we not subtract 1? We'd have to change
+        //     // TileController.CheckTileOccupancyByPosition to < instead of <=
+        //     Vector2Int adjustedFootprint = footprint - Vector2Int.one;
+        //     // Debug.Log("adjustedFootprint: " + adjustedFootprint);
+        //     switch (step)
+        //     {
+        //         case 0:
+        //             end = transform.Position2dInt() + adjustedFootprint;
+        //             break;
+        //
+        //         case 1:
+        //             end = transform.Position2dInt() - adjustedFootprint.Transpose();
+        //             break;
+        //
+        //         case 2:
+        //             end = transform.Position2dInt() - adjustedFootprint;
+        //             break;
+        //
+        //         case 3:
+        //             end = transform.Position2dInt() + adjustedFootprint.Transpose();
+        //             break;
+        //
+        //     }
+        //     // Debug.Log("Footprint rotation: " +
+        //     //         GetComponent<GridMover>().pivot.rotation.eulerAngles);
+        //     // Keep in mind iterating through this will need to stop before the end.
+        //     return (transform.Position2dInt(), end);
+        // }
     }
 }

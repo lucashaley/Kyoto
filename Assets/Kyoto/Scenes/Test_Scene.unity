@@ -837,6 +837,18 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 802665181341557753, guid: c304a40eb052c41bb96c03766432e1d5,
+        type: 3}
+      propertyPath: fadeValue
+      value: 
+      objectReference: {fileID: 11400000, guid: dd11e5ffb7cea4a14b129c4886f1c506,
+        type: 2}
+    - target: {fileID: 802665181341557753, guid: c304a40eb052c41bb96c03766432e1d5,
+        type: 3}
+      propertyPath: curve
+      value: 
+      objectReference: {fileID: 11400000, guid: 4e9fbd577d75d4b7b8328cf2ee5fef9e,
+        type: 2}
     - target: {fileID: 802665181341557758, guid: c304a40eb052c41bb96c03766432e1d5,
         type: 3}
       propertyPath: m_LocalPosition.x

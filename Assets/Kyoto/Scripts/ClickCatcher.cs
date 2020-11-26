@@ -17,7 +17,7 @@ namespace Kyoto
 
         void OnMouseUpAsButton()
         {
-            positioner?.Remove();
+            positioner?.Deactivate();
         }
     }
 }

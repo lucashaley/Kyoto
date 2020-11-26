@@ -14,21 +14,24 @@ namespace Kyoto
         // public Placeable currentPlaceable;
         public Placeable currentNonMoverPlaceable;
         public ClickCatcher clickCatcher;
-        public GridMover gridMover;
+        // public GridMover gridMover;
 
         private Vector2IntEvent movePositionerEvent;
-        // public Vector2IntEvent rotateToPositionerEvent;
         public UnityEvent rotatePositionerEvent;
 
-        // this event is for when a placeable gets deselected
-        // not sure we need it though
-        // public PlaceableEvent placeableEvent;
-
         public bool isMoving;
+        private bool isTweening;
+        public bool fancy = true;
+        // public int rotationStep = 0;
+        private Vector3 rotationPoint = Vector3.one;
+        public bool usePivotOffset = true;
 
         private Renderer rend;
         public LayerMask mask;
         public Transform currentTileTransform;
+        public FloatVariable fadeValue;
+        public AnimationCurveVariable curve;
+
 
         /// <summary>
         /// This is presumably where we check to see if the rotate will cause an
@@ -37,13 +40,83 @@ namespace Kyoto
         void Rotate()
         {
             Vector2Int start, end;
-            (start, end) = currentNonMoverPlaceable.GetFootprintWithRotationStep(
-                    (currentNonMoverPlaceable.GetComponent<GridMover>().rotationStep+1)%4);
+            (start, end) = GetFootprintWithRotationStep(
+                    (currentNonMoverPlaceable.rotationStep+1)%4);
+            Debug.Log("Start: " + start);
+            Debug.Log("End: " + end);
             bool occupied = TileController.Instance.CheckTileOccupancyByPosition(start, end, currentNonMoverPlaceable);
             Debug.Log("Occupied: " + occupied);
 
             // we have a legal move, so go ahead and rotate
-            if (!occupied) rotatePositionerEvent.Invoke();
+            if (!occupied)
+            {
+                RotateStep();
+                // rotatePositionerEvent.Invoke();
+            }
+        }
+
+        /// <remarks>
+        /// We're going to assume 90 CW rotation.
+        /// </remarks>
+        public void RotateStep()
+        {
+            if (!isTweening)
+            {
+                Tween.LocalRotation(pivot,
+                                    pivot.localEulerAngles + (Vector3.up * 90f),
+                                    fadeValue.Value,
+                                    0.0f,
+                                    Tween.EaseInOutStrong,
+                                    Tween.LoopType.None,
+                                    StartTween,
+                                    EndTween
+                                    );
+                if (fancy)
+                {
+                    Tween.LocalScale(transform,
+                                   new Vector3(0.85f, 0.85f, 0.85f),
+                                   fadeValue.Value,
+                                   0,
+                                   curve.curve,
+                                   Tween.LoopType.None
+                                   );
+                }
+
+                currentNonMoverPlaceable.rotationStep = (currentNonMoverPlaceable.rotationStep+1)%4;
+            }
+        }
+
+
+        void MoveTo(Vector2Int destination)
+        {
+            if (!isTweening)
+            {
+                Tween.Position(transform,
+                              destination.Vector3NoY(),
+                              fadeValue.Value,
+                              0.0f,
+                              Tween.EaseInOutStrong,
+                              Tween.LoopType.None,
+                              StartTween,
+                              EndTween
+                              );
+                Tween.LocalScale(pivot,
+                                 new Vector3(0.85f, 0.85f, 0.85f),
+                                 fadeValue.Value,
+                                 0,
+                                 curve.curve,
+                                 Tween.LoopType.None
+                                 );
+            }
+        }
+
+        private void StartTween()
+        {
+            isTweening = true;
+        }
+        private void EndTween()
+        {
+            isTweening = false;
         }
 
         void Awake()
@@ -57,76 +130,72 @@ namespace Kyoto
 
             clickCatcher = ClickCatcher.Instance;
             clickCatcher.positioner = this;
-            gridMover = GetComponent<GridMover>();
-            gridMover.AddMover(transform);
+            // gridMover = GetComponent<GridMover>();
+            // gridMover.AddMover(transform);
 
             movePositionerEvent = new Vector2IntEvent();
         }
 
         void OnEnable()
         {
-            // Register to move itself
-            // movePositionerEvent.AddListener(gridMover.MoveToInt);
-            movePositionerEvent.AddListener(gridMover.MoveMovers);
-            rotatePositionerEvent.AddListener(gridMover.RotateStep);
         }
 
         void OnDisable()
         {
-            // movePositionerEvent.RemoveListener(gridMover.MoveToInt);
-            movePositionerEvent.RemoveListener(gridMover.MoveMovers);
-            rotatePositionerEvent.RemoveListener(gridMover.RotateStep);
         }
 
         public void Activate(Placeable placeable)
         {
+            Debug.Log("Activate: " + gameObject.name);
+
             if (currentNonMoverPlaceable)
             {
                 RemovePlaceable();
             }
 
+            Debug.Log("Move Positioner to Placeable");
             transform.position = placeable.transform.position;
+
             AddPlaceable(placeable);
+            SetPivot();
 
-            // currentNonMoverPlaceable = placeable;
-            // currentNonMoverPlaceable.transform.SetParent(transform);
-            // currentNonMoverPlaceable.transform.parent = transform;
-
-            // if (currentPlaceable)
-            // {
-            //     gridMover.RemoveMover(currentPlaceable.transform);
-            //     currentPlaceable.Deselect();
-            //     gridMover.footprint = Vector2Int.one;
-            // }
-
-            // SetVolume(placeable.volume);
-
-            // gridMover.footprint = placeable.footprint;
-            // gridMover.SetPivot();
-            // pivot.localEulerAngles = placeable.transform.Find("Pivot").transform.localEulerAngles;
-
-            // currentPlaceable = placeable;
             currentTileTransform = TransformFromRaycast();
             GetComponent<BoxCollider>().enabled = true;
             rend.enabled = true;
         }
 
-        void Deactivate()
+        public void Deactivate()
         {
             if (currentNonMoverPlaceable)
             {
                 RemovePlaceable();
             }
-            // if (currentPlaceable) currentPlaceable.GetComponent<Placeable>().Deselect();
-            // currentPlaceable = null;
             GetComponent<BoxCollider>().enabled = false;
             rend.enabled = false;
         }
 
-        public void Remove()
+        public void SetPivot()
         {
-            // REFACTOR: do we even need this layer any more?
-            Deactivate();
+            Debug.Log("SetPivot");
+            if ((currentNonMoverPlaceable.footprint.x + currentNonMoverPlaceable.footprint.y)%2 == 1)
+            {
+                rotationPoint = new Vector3(0.5f, 0f, 0.5f);
+            } else {
+                rotationPoint = new Vector3(currentNonMoverPlaceable.footprint.x * 0.5f, 0f, currentNonMoverPlaceable.footprint.y * 0.5f);
+            }
+
+            if (usePivotOffset)
+            {
+                // We only want the top level
+                Transform[] childrenTransforms = pivot.GetComponentsInChildren<Transform>();
+                foreach (Transform t in childrenTransforms)
+                {
+                    // only do the top most level of children
+                    if (t.parent == pivot)
+                        t.localPosition = rotationPoint * -1f;
+                }
+                pivot.localPosition = rotationPoint;
+            }
         }
 
         /// INTERACTION ///
@@ -158,10 +227,18 @@ namespace Kyoto
 
         void OnMouseDrag()
         {
+            // Check to see which tile we're in
             Transform newTile = TransformFromRaycast();
+
+            // If we're still moving and in a new tile, move the positioner.
             if (isMoving && newTile != currentTileTransform)
             {
-                movePositionerEvent.Invoke(newTile.Position2dInt());
+                // this is the old method with a GridMover.
+                // movePositionerEvent.Invoke(newTile.Position2dInt());
+
+                // this is the new method using just the positioner.
+                MoveTo(currentTileTransform.Position2dInt());
+
                 currentTileTransform = newTile;
             }
         }
@@ -201,22 +278,17 @@ namespace Kyoto
 
         private void AddPlaceable(Placeable placeable)
         {
+            Debug.Log("AddPlaceable: " + placeable.gameObject.name, placeable);
             currentNonMoverPlaceable = placeable;
-            currentNonMoverPlaceable.transform.SetParent(transform);
-
-            gridMover.AddMover(placeable.transform);
+            currentNonMoverPlaceable.transform.SetParent(pivot);
+            currentNonMoverPlaceable.transform.localPosition = Vector3.zero;
 
             SetVolume(placeable.volume);
-
-            gridMover.footprint = placeable.footprint;
-            gridMover.SetPivot();
-            pivot.localEulerAngles = placeable.transform.Find("Pivot").transform.localEulerAngles;
-
         }
         private void RemovePlaceable()
         {
             currentNonMoverPlaceable.transform.SetParent(GameObject.Find("Placeables").transform);
-            gridMover.RemoveMover(currentNonMoverPlaceable.transform);
+            currentNonMoverPlaceable.Deselect();
             currentNonMoverPlaceable = null;
         }
 
@@ -225,6 +297,58 @@ namespace Kyoto
             cube.localScale = vol;
             GetComponent<BoxCollider>().size = vol;
             GetComponent<BoxCollider>().center = (Vector3)vol/2;
+        }
+
+        public void SetOccupancy(bool isOccupied)
+        {
+            Debug.Log("Positioner.SetOccupancy", this);
+            Vector2Int start, end = default;
+
+            (start, end) = GetCurrentFootprint();
+
+            Debug.Log("Positioner.SetOccupancy: " + start + ", " + end);
+            TileController.Instance
+                          .SetTileOccupancyByPosition
+                            (
+                                start,
+                                end,
+                                isOccupied ? currentNonMoverPlaceable : null
+                            );
+        }
+
+        public (Vector2Int start, Vector2Int end) GetFootprintWithRotationStep(int step)
+        {
+            Vector2Int end = Vector2Int.zero;
+            // REFACTOR should we not subtract 1? We'd have to change
+            // TileController.CheckTileOccupancyByPosition to < instead of <=
+            Vector2Int adjustedFootprint = currentNonMoverPlaceable.footprint - Vector2Int.one;
+            // Debug.Log("adjustedFootprint: " + adjustedFootprint);
+            switch (step)
+            {
+                case 0:
+                    end = transform.Position2dInt() + adjustedFootprint;
+                    break;
+
+                case 1:
+                    end = transform.Position2dInt() - adjustedFootprint.Transpose();
+                    break;
+
+                case 2:
+                    end = transform.Position2dInt() - adjustedFootprint;
+                    break;
+
+                case 3:
+                    end = transform.Position2dInt() + adjustedFootprint.Transpose();
+                    break;
+
+            }
+
+            return (transform.Position2dInt(), end);
+        }
+
+        public (Vector2Int start, Vector2Int end) GetCurrentFootprint()
+        {
+            return GetFootprintWithRotationStep(currentNonMoverPlaceable.rotationStep);
         }
 
         /// ACCESSORS ///

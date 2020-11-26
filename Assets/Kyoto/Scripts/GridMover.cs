@@ -52,11 +52,12 @@ namespace Kyoto
 
             pivot = transform.Find("Pivot");
 
-            SetPivot();
+            // SetPivot();
         }
 
         public void SetPivot()
         {
+            Debug.Log("SetPivot");
             if ((footprint.x + footprint.y)%2 == 1)
             {
                 rotationPoint = new Vector3(0.5f, 0f, 0.5f);
@@ -66,9 +67,15 @@ namespace Kyoto
 
             if (usePivotOffset)
             {
+                // THIS IS THE MOTHERFUCKING PROBLEM
+                // We only want the top level
                 Transform[] childrenTransforms = pivot.GetComponentsInChildren<Transform>();
                 foreach (Transform t in childrenTransforms)
-                    t.localPosition = rotationPoint * -1f;
+                {
+                    // only do the top most level of children
+                    if (t.parent == pivot)
+                        t.localPosition = rotationPoint * -1f;
+                }
                 pivot.localPosition = rotationPoint;
             }
         }
@@ -96,42 +103,44 @@ namespace Kyoto
 
         void EndTween(Transform t)
         {
-
+            t.position = t.position.RoundedInt();
+            transform.localScale = Vector3.one;
+            t.localEulerAngles = Vector3Int.FloorToInt(t.localEulerAngles);
         }
 
 
-        public void MoveToInt(Vector2Int destination)
-        {
-            if (!isTweening)
-            {
-                Tween.Position(transform,
-                              destination.Vector3NoY(),
-                              fadeValue.Value,
-                              0.0f,
-                              Tween.EaseInOutStrong,
-                              Tween.LoopType.None,
-                              // () => isTweening = true,
-                              // () => isTweening = false
-                              StartTween,
-                              EndTween
-                              );
-                // REFACTOR this to a separate fader component?
-                Tween.ShaderVector (rend.material,
-                                    "_Color",
-                                    new Vector4 (1, 1, 1, 0),
-                                    fadeValue.Value,
-                                    0,
-                                    curve.curve,
-                                    Tween.LoopType.None);
-                Tween.LocalScale(transform.GetChild(0),
-                                 new Vector3(0.85f, 0.85f, 0.85f),
-                                 fadeValue.Value,
-                                 0,
-                                 curve.curve,
-                                 Tween.LoopType.None
-                                 );
-            }
-        }
+        // public void MoveToInt(Vector2Int destination)
+        // {
+        //     if (!isTweening)
+        //     {
+        //         Tween.Position(transform,
+        //                       destination.Vector3NoY(),
+        //                       fadeValue.Value,
+        //                       0.0f,
+        //                       Tween.EaseInOutStrong,
+        //                       Tween.LoopType.None,
+        //                       // () => isTweening = true,
+        //                       // () => isTweening = false
+        //                       StartTween,
+        //                       EndTween
+        //                       );
+        //         // REFACTOR this to a separate fader component?
+        //         Tween.ShaderVector (rend.material,
+        //                             "_Color",
+        //                             new Vector4 (1, 1, 1, 0),
+        //                             fadeValue.Value,
+        //                             0,
+        //                             curve.curve,
+        //                             Tween.LoopType.None);
+        //         Tween.LocalScale(transform.GetChild(0),
+        //                          new Vector3(0.85f, 0.85f, 0.85f),
+        //                          fadeValue.Value,
+        //                          0,
+        //                          curve.curve,
+        //                          Tween.LoopType.None
+        //                          );
+        //     }
+        // }
 
         // REFACTOR this name sucks
         public void MoveMovers(Vector2Int destination)
