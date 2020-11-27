@@ -24,5 +24,10 @@ namespace Kyoto
         {
             return trans.position.Vector2IntNoY();
         }
+
+        public static Vector2Int LocalPosition2dInt(this Transform trans)
+        {
+            return trans.localPosition.Vector2IntNoY();
+        }
     }
 }

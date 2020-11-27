@@ -31,12 +31,15 @@ namespace Kyoto
 
         private Positioner positioner;
 
+        public BoxCollider bounder;
+
         void Awake()
         {
             pivot = transform.Find("Pivot");
             positioner = Positioner.Instance;
             // positioner.placeableEvent.AddListener(this.Deselect);
 
+            CreateBounder();
             CreateTileCatch();
             CreateGeoCatch();
 
@@ -62,7 +65,6 @@ namespace Kyoto
         /// </summary>
         public void Select()
         {
-            Debug.Log("Select: " + gameObject.name);
             // Audio cue
 
             // Turn geometry catch off
@@ -77,42 +79,20 @@ namespace Kyoto
 
         public void Deselect()
         {
-            // positioner.DeregisterMoveEvent(Place);
-            // positioner.rotatePositionerEvent.RemoveListener(GetComponent<GridMover>().RotateStep);
-            // positioner.rotatePositionerEvent.RemoveListener(RotateStep);
-
             geoCatch.SetActive(true);
         }
 
-        // public void Place(Vector2Int pos)
-        // {
-        //     ClearOccupancy();
-        //
-        //     GetComponent<GridMover>().MoveToInt(pos);
-        // }
-        //
-        // public void RotateStep()
-        // {
-        //     // clear the Occupancy
-        //     ClearOccupancy();
-        //
-        //     // Send the rotate Command
-        //     GetComponent<GridMover>().RotateStep();
-        //
-        //     // set the Occupancy
-        //     // This is done in a completed callback from the GridMover.
-        // }
-        //
         /// <remarks>
         /// Should this be here or in the Positioner?
         /// Not working yet!
         /// </remarks>
         public void SetOccupancy(bool active)
         {
-            Debug.Log("Placeable: SetOccupancy", this);
+            // Debug.Log("Placeable: SetOccupancy", this);
 
             Vector2Int start, end = default;
-            (start, end) = GetCurrentFootprint();
+            // (start, end) = GetCurrentFootprint();
+            (start, end) = GetTileBounds();
 
             Debug.Log("SetOccupancy: " + start + ", " + end);
 
@@ -138,6 +118,17 @@ namespace Kyoto
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        private void CreateBounder()
+        {
+            bounder = gameObject.AddComponent<BoxCollider>();
+            // bounder.enabled = false;
+            bounder.isTrigger = true;
+            bounder.size = volume.Vector3WithY(0.2f);
+            // bounder.center = (Vector3)volume * 0.5f;
+            // bounder.center.y = 0.1f;
+            bounder.center = bounder.size * 0.5f;
         }
 
         private void CreateTileCatch()
@@ -173,32 +164,50 @@ namespace Kyoto
 
         public (Vector2Int start, Vector2Int end) GetFootprintWithRotationStep(int step)
         {
-            Vector2Int end = Vector2Int.zero;
+            Vector2Int end = Vector2Int.zero, start = Vector2Int.zero;
             // REFACTOR should we not subtract 1? We'd have to change
             // TileController.CheckTileOccupancyByPosition to < instead of <=
             Vector2Int adjustedFootprint = footprint - Vector2Int.one;
+            // Debug.Log("position: " + transform.Position2dInt());
+            // Debug.Log("adjustedFootprint: " + adjustedFootprint);
 
             switch (step)
             {
                 case 0:
-                    end = transform.Position2dInt() + adjustedFootprint;
+                    start = transform.Position2dInt();
+                    // end = transform.Position2dInt() + adjustedFootprint;
+                    end = start + adjustedFootprint;
                     break;
 
                 case 1:
-                    end = transform.Position2dInt() - adjustedFootprint.Transpose();
+                    start = transform.Position2dInt() - (Vector2Int.up * footprint.x);
+                    // end = transform.Position2dInt() - adjustedFootprint.Transpose();
+                    end = start + adjustedFootprint.Transpose();
                     break;
 
                 case 2:
-                    end = transform.Position2dInt() - adjustedFootprint;
+                    start = transform.Position2dInt() - footprint;
+                    // end = transform.Position2dInt() - adjustedFootprint;
+                    end = start + adjustedFootprint;
                     break;
 
                 case 3:
-                    end = transform.Position2dInt() + adjustedFootprint.Transpose();
+                    start = transform.Position2dInt() - (Vector2Int.right * footprint.y);
+                    // end = transform.Position2dInt() + adjustedFootprint.Transpose();
+                    end = start + adjustedFootprint;
                     break;
 
             }
 
-            return (transform.Position2dInt(), end);
+            return (start, end);
+        }
+
+        public (Vector2Int min, Vector2Int max) GetTileBounds()
+        {
+            Vector2Int min = bounder.bounds.min.Vector2IntNoY();
+            Vector2Int max = (bounder.bounds.max - Vector3.one).Vector2IntNoY();
+
+            return (min, max);
         }
     }
 }

@@ -43,8 +43,8 @@ namespace Kyoto
             Vector2Int start, end;
             (start, end) = currentNonMoverPlaceable.GetFootprintWithRotationStep(
                     (currentNonMoverPlaceable.rotationStep+1)%4);
-            Debug.Log("Start: " + start);
-            Debug.Log("End: " + end);
+            // Debug.Log("Start: " + start);
+            // Debug.Log("End: " + end);
             bool occupied = TileController.Instance.CheckTileOccupancyByPosition(start, end, currentNonMoverPlaceable);
             Debug.Log("Occupied: " + occupied);
 
@@ -90,7 +90,7 @@ namespace Kyoto
 
         void MoveTo(Vector2Int destination)
         {
-            Debug.Log("MoveTo: " + destination);
+            // Debug.Log("MoveTo: " + destination);
 
             if (!isTweening)
             {
@@ -117,11 +117,17 @@ namespace Kyoto
 
         private void StartTween()
         {
+            Debug.Log("Bounds Min: " + currentNonMoverPlaceable.bounder.bounds.min.Vector2IntNoY());
+            Debug.Log("Bounds Max: " + (currentNonMoverPlaceable.bounder.bounds.max - Vector3.one).Vector2IntNoY());
+
             currentNonMoverPlaceable.SetOccupancy(false);
             isTweening = true;
         }
         private void EndTween()
         {
+            Debug.Log("Bounds Min: " + currentNonMoverPlaceable.bounder.bounds.min.Vector2IntNoY());
+            Debug.Log("Bounds Max: " + (currentNonMoverPlaceable.bounder.bounds.max - Vector3.one).Vector2IntNoY());
+
             isTweening = false;
             currentNonMoverPlaceable.SetOccupancy(true);
         }
@@ -149,7 +155,7 @@ namespace Kyoto
 
         public void Activate(Placeable placeable)
         {
-            Debug.Log("Activate: " + gameObject.name);
+            // Debug.Log("Activate: " + gameObject.name);
 
             if (currentNonMoverPlaceable)
             {
@@ -182,7 +188,7 @@ namespace Kyoto
 
         public void SetPivot()
         {
-            Debug.Log("SetPivot");
+            // Debug.Log("SetPivot");
             if ((currentNonMoverPlaceable.footprint.x + currentNonMoverPlaceable.footprint.y)%2 == 1)
             {
                 rotationPoint = new Vector3(0.5f, 0f, 0.5f);
@@ -302,7 +308,7 @@ namespace Kyoto
 
         private void AddPlaceable(Placeable placeable)
         {
-            Debug.Log("AddPlaceable: " + placeable.gameObject.name, placeable);
+            // Debug.Log("AddPlaceable: " + placeable.gameObject.name, placeable);
             currentNonMoverPlaceable = placeable;
             currentNonMoverPlaceable.transform.SetParent(pivot);
             currentNonMoverPlaceable.transform.localPosition = Vector3.zero;
