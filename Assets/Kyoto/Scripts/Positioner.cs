@@ -11,8 +11,9 @@ namespace Kyoto
     {
         public Transform pivot;
         public Transform cube;
+        public BoxCollider col;
 
-        public Placeable currentNonMoverPlaceable;
+        public Placeable currentPlaceable;
         public ClickCatcher clickCatcher;
 
         // private Vector2IntEvent movePositionerEvent;
@@ -23,7 +24,7 @@ namespace Kyoto
         private bool isTweening;
         public bool fancy = true;
 
-        private Vector3 rotationPoint = Vector3.one;
+        public Vector3 rotationPoint = Vector3.one;
         public bool usePivotOffset = true;
 
         private Renderer rend;
@@ -34,102 +35,73 @@ namespace Kyoto
         public AnimationCurveVariable curve;
 
 
+        private bool CheckMove(Vector2Int destination)
+        {
+            // Debug.Log("CheckMove");
+
+            Vector2Int delta = destination - currentPlaceable.transform.Position2dInt();
+            Vector2Int start, end;
+            (start, end) = currentPlaceable.GetTileBounds();
+
+            start += delta;
+            end += delta;
+
+            // Debug.Log("Checking: " + start + ", " + end);
+
+            return TileController.Instance.CheckTileOccupancyByPosition(start, end, currentPlaceable);
+        }
+
         /// <summary>
         /// This is presumably where we check to see if the rotate will cause an
         /// invalid move.
         /// </summary>
-        void Rotate()
+        private bool CheckRotate()
         {
+            Vector2Int min, max;
             Vector2Int start, end;
-            (start, end) = currentNonMoverPlaceable.GetFootprintWithRotationStep(
-                    (currentNonMoverPlaceable.rotationStep+1)%4);
-            // Debug.Log("Start: " + start);
-            // Debug.Log("End: " + end);
-            bool occupied = TileController.Instance.CheckTileOccupancyByPosition(start, end, currentNonMoverPlaceable);
-            Debug.Log("Occupied: " + occupied);
+            (min, max) = currentPlaceable.GetTileBounds();
+            Debug.Log("CheckRotate Pivot position: " + pivot.position.Vector2NoY());
+            Debug.Log("CheckRotate Before: " + min + ", " + max);
 
-            // we have a legal move, so go ahead and rotate
-            if (!occupied)
-            {
-                RotateStep();
-                // rotatePositionerEvent.Invoke();
-            }
+            (start, end) = RotateRectAroundPoint(min, max, pivot.position.Vector2NoY());
+
+            Debug.Log("CheckRotate After: " + start + ", " + end);
+
+            return TileController.Instance.CheckTileOccupancyByPosition(start, end, currentPlaceable);
         }
 
-        /// <remarks>
-        /// We're going to assume 90 CW rotation.
-        /// </remarks>
-        public void RotateStep()
-        {
-            if (!isTweening)
-            {
-                Tween.LocalRotation(pivot,
-                                    pivot.localEulerAngles + (Vector3.up * 90f),
-                                    fadeValue.Value,
-                                    0.0f,
-                                    Tween.EaseInOutStrong,
-                                    Tween.LoopType.None,
-                                    StartTween,
-                                    EndTween
-                                    );
-                if (fancy)
-                {
-                    Tween.LocalScale(transform,
-                                   new Vector3(0.85f, 0.85f, 0.85f),
-                                   fadeValue.Value,
-                                   0,
-                                   curve.curve,
-                                   Tween.LoopType.None
-                                   );
-                }
+        // void MoveTo(Vector2Int destination)
+        // {
+        //     // Debug.Log("MoveTo: " + destination);
+        //
+        //     if (!isTweening)
+        //     {
+        //         // SetOccupancy(false);
+        //
+        //         Tween.Position(transform,
+        //                       destination.Vector3NoY(),
+        //                       fadeValue.Value,
+        //                       0.0f,
+        //                       Tween.EaseInOutStrong,
+        //                       Tween.LoopType.None,
+        //                       StartTween,
+        //                       EndTween
+        //                       );
+        //         Tween.LocalScale(pivot,
+        //                          new Vector3(0.85f, 0.85f, 0.85f),
+        //                          fadeValue.Value,
+        //                          0,
+        //                          curve.curve,
+        //                          Tween.LoopType.None
+        //                          );
+        //     }
+        // }
 
-                currentNonMoverPlaceable.rotationStep = (currentNonMoverPlaceable.rotationStep+1)%4;
-            }
+        public void StartTween()
+        {
         }
-
-
-        void MoveTo(Vector2Int destination)
+        public void EndTween()
         {
-            // Debug.Log("MoveTo: " + destination);
-
-            if (!isTweening)
-            {
-                // SetOccupancy(false);
-
-                Tween.Position(transform,
-                              destination.Vector3NoY(),
-                              fadeValue.Value,
-                              0.0f,
-                              Tween.EaseInOutStrong,
-                              Tween.LoopType.None,
-                              StartTween,
-                              EndTween
-                              );
-                Tween.LocalScale(pivot,
-                                 new Vector3(0.85f, 0.85f, 0.85f),
-                                 fadeValue.Value,
-                                 0,
-                                 curve.curve,
-                                 Tween.LoopType.None
-                                 );
-            }
-        }
-
-        private void StartTween()
-        {
-            Debug.Log("Bounds Min: " + currentNonMoverPlaceable.bounder.bounds.min.Vector2IntNoY());
-            Debug.Log("Bounds Max: " + (currentNonMoverPlaceable.bounder.bounds.max - Vector3.one).Vector2IntNoY());
-
-            currentNonMoverPlaceable.SetOccupancy(false);
-            isTweening = true;
-        }
-        private void EndTween()
-        {
-            Debug.Log("Bounds Min: " + currentNonMoverPlaceable.bounder.bounds.min.Vector2IntNoY());
-            Debug.Log("Bounds Max: " + (currentNonMoverPlaceable.bounder.bounds.max - Vector3.one).Vector2IntNoY());
-
-            isTweening = false;
-            currentNonMoverPlaceable.SetOccupancy(true);
         }
 
         void Awake()
@@ -138,6 +110,8 @@ namespace Kyoto
             mask = LayerMask.GetMask("Tiles");
             pivot = transform.Find("Pivot");
             cube = transform.Find("Pivot/PositionerCube_01");
+            // col = transform.Find("Pivot/Collider").GetComponent<BoxCollider>();
+            col = GetComponent<BoxCollider>();
 
             currentTileTransform = transform;
 
@@ -155,22 +129,27 @@ namespace Kyoto
 
         public void Activate(Placeable placeable)
         {
-            // Debug.Log("Activate: " + gameObject.name);
+            Debug.Log("Activate: " + gameObject.name);
 
-            if (currentNonMoverPlaceable)
+            if (currentPlaceable)
             {
                 RemovePlaceable();
             }
-            currentNonMoverPlaceable = placeable;
+            currentPlaceable = placeable;
 
-            pivot.localEulerAngles = Vector3.up * 90 * currentNonMoverPlaceable.rotationStep;
-            transform.position = currentNonMoverPlaceable.transform.position;
+            // pivot.localEulerAngles = Vector3.up * 90 * currentPlaceable.rotationStep;
+            pivot.localRotation = currentPlaceable.pivot.localRotation;
+            // Debug.Log("Postioner position: " + transform.position);
 
-            AddPlaceable(currentNonMoverPlaceable);
+            // This might be the issue!
+            transform.position = currentPlaceable.transform.position;
+            // Debug.Log("Postioner position: " + transform.position);
+
+            AddPlaceable(currentPlaceable);
             SetPivot();
 
             currentTileTransform = TransformFromRaycast();
-            GetComponent<BoxCollider>().enabled = true;
+            col.enabled = true;
             rend.enabled = true;
 
             currentPivotTile = TileController.Instance.GetTile(transform.Position2dInt());
@@ -178,26 +157,28 @@ namespace Kyoto
 
         public void Deactivate()
         {
-            if (currentNonMoverPlaceable)
+            if (currentPlaceable)
             {
                 RemovePlaceable();
             }
-            GetComponent<BoxCollider>().enabled = false;
+            col.enabled = false;
             rend.enabled = false;
         }
 
         public void SetPivot()
         {
-            // Debug.Log("SetPivot");
-            if ((currentNonMoverPlaceable.footprint.x + currentNonMoverPlaceable.footprint.y)%2 == 1)
+            if ((currentPlaceable.footprint.x + currentPlaceable.footprint.y)%2 == 1)
             {
+                Debug.Log("Odd footprint");
                 rotationPoint = new Vector3(0.5f, 0f, 0.5f);
             } else {
-                rotationPoint = new Vector3(currentNonMoverPlaceable.footprint.x * 0.5f, 0f, currentNonMoverPlaceable.footprint.y * 0.5f);
+                Debug.Log("Even footprint");
+                rotationPoint = currentPlaceable.footprint.Vector3NoY() * 0.5f;
             }
 
             if (usePivotOffset)
             {
+                // Debug.Log("currentPlaceable localPosition: " + currentPlaceable.transform.localPosition);
                 // We only want the top level
                 Transform[] childrenTransforms = pivot.GetComponentsInChildren<Transform>();
                 foreach (Transform t in childrenTransforms)
@@ -206,8 +187,49 @@ namespace Kyoto
                     if (t.parent == pivot)
                         t.localPosition = rotationPoint * -1f;
                 }
+                // Debug.Log("currentPlaceable localPosition: " + currentPlaceable.transform.localPosition);
+                // Debug.Log("pivot localPosition: " + pivot.localPosition);
+                //
+                // Debug.Log("rotationPoint Before: " + rotationPoint);
+                switch (currentPlaceable.rotationStep)
+                {
+                    case 1:
+                        rotationPoint = new Vector3(rotationPoint.z, 0f, -rotationPoint.x);
+                        break;
+                }
+                // Debug.Log("rotationPoint After: " + rotationPoint);
+
+
                 pivot.localPosition = rotationPoint;
+                // Debug.Log("currentPlaceable localPosition: " + currentPlaceable.transform.localPosition);
+                // Debug.Log("pivot localPosition: " + pivot.localPosition);
             }
+        }
+
+        private void AddPlaceable(Placeable placeable)
+        {
+            // Debug.Log("AddPlaceable: " + placeable.gameObject.name, placeable);
+            // currentPlaceable = placeable;
+            // currentPlaceable.transform.SetParent(pivot);
+            // currentPlaceable.transform.localPosition = Vector3.zero;
+            // Debug.Log("currentPlaceable localPosition: " + currentPlaceable.transform.localPosition);
+            // currentPlaceable.SetTileCatch(false);
+
+            SetVolume(placeable.volume);
+        }
+        private void RemovePlaceable()
+        {
+            // currentPlaceable.transform.SetParent(GameObject.Find("Placeables").transform);
+            // currentPlaceable.Deselect(true);
+            currentPlaceable.Deselect();
+            currentPlaceable = null;
+        }
+
+        public void SetVolume(Vector3Int vol)
+        {
+            cube.localScale = vol;
+            col.size = vol;
+            col.center = (Vector3)vol/2;
         }
 
         /// INTERACTION ///
@@ -220,7 +242,19 @@ namespace Kyoto
             {
                 // Player touched the top, so rotate
                 case Vector3 v when v == Vector3.up:
-                    Rotate();
+                    if (!isMoving)
+                    {
+                        bool invalid = CheckRotate();
+                        Debug.Log("Invalid Rotate: " + invalid);
+
+                        // we have a legal move, so go ahead and rotate
+                        if (!invalid)
+                        {
+                            // RotateStep();
+                            GetComponent<SimpleMover>().RotateStep();
+                            currentPlaceable.GetComponent<SimpleMover>().RotateStep();
+                        }
+                    }
                     break;
                 // Touching the bottom does nothing
                 case Vector3 v when v == Vector3.down:
@@ -232,25 +266,29 @@ namespace Kyoto
             }
         }
 
-        void OnMouseUp()
-        {
-            isMoving = false;
-        }
-
         void OnMouseDrag()
         {
             // Check to see which tile we're in
             Transform newTile = TransformFromRaycast();
-            // Tile tile = TileFromRaycast();
-            // Debug.Log("Tile: " + tile.gameObject.name, tile);
 
             // If we're still moving and in a new tile, move the positioner.
             if (isMoving && newTile != currentTileTransform)
             {
-                MoveTo(newTile.Position2dInt());
+                bool invalid = CheckMove(newTile.Position2dInt());
+                // Debug.Log("Invalid Move: " + invalid);
+
+                if (!invalid)
+                    // MoveTo(newTile.Position2dInt());
+                    GetComponent<SimpleMover>().MoveTo(newTile.Position2dInt());
+                    currentPlaceable.GetComponent<SimpleMover>().MoveTo(newTile.Position2dInt());
 
                 currentTileTransform = newTile;
             }
+        }
+
+        void OnMouseUp()
+        {
+            isMoving = false;
         }
 
         /// UTILITY METHODS ///
@@ -283,7 +321,7 @@ namespace Kyoto
             if (Physics.Raycast(ray, out hit, 100, mask.value))
             {
                 Tile tile;
-                Debug.Log("Hit: " + hit.transform.gameObject.name);
+                // Debug.Log("Hit: " + hit.transform.gameObject.name);
                 if (hit.transform.gameObject.TryGetComponent<Tile>(out tile))
                 {
                     return tile;
@@ -306,28 +344,59 @@ namespace Kyoto
             }
         }
 
-        private void AddPlaceable(Placeable placeable)
+        public (Vector2Int, Vector2Int) RotateRectAroundPoint(Vector2Int start, Vector2Int end, Vector2 axis)
         {
-            // Debug.Log("AddPlaceable: " + placeable.gameObject.name, placeable);
-            currentNonMoverPlaceable = placeable;
-            currentNonMoverPlaceable.transform.SetParent(pivot);
-            currentNonMoverPlaceable.transform.localPosition = Vector3.zero;
-            currentNonMoverPlaceable.SetTileCatch(false);
+            // From (1, 0) (1, 1)
+            // and Axis (1.5, 1.5)
+            // We want (0, 2) (1, 2)
+            Vector2 aStart, aEnd;
+            Vector2 newStart = Vector2.zero, newEnd = Vector2.zero;
 
-            SetVolume(placeable.volume);
-        }
-        private void RemovePlaceable()
-        {
-            currentNonMoverPlaceable.transform.SetParent(GameObject.Find("Placeables").transform);
-            currentNonMoverPlaceable.Deselect();
-            currentNonMoverPlaceable = null;
+            aStart = (Vector2)start - axis; // (-0.5, -1.5)
+            aEnd = (Vector2)end - axis; // (-0.5, -0.5)
+
+            // flip x and y
+            Vector2 tempStart = new Vector2(-aStart.y, aStart.x); // (1.5, -0.5)
+            Vector2 tempEnd = new Vector2(-aEnd.y, aEnd.x); // (0.5, -0.5)
+
+            // add the axis back again, subtracting one for the tile size
+            tempStart += axis - Vector2.one; // (3, 1) -> (2, 0)
+            tempEnd += axis - Vector2.one; // (2, 1) -> (1, 0)
+
+            Debug.Log("TempStart: " + tempStart);
+            Debug.Log("TempEnd: " + tempEnd);
+
+            // get min and max
+            newStart = Vector2.Min(tempStart, tempEnd);
+            newEnd = Vector2.Max(tempStart, tempEnd);
+
+            return (newStart.Vector2Int(), newEnd.Vector2Int());
         }
 
-        public void SetVolume(Vector3Int vol)
+        private void ResizeCollision(Vector3 size, Vector3 center)
         {
-            cube.localScale = vol;
-            GetComponent<BoxCollider>().size = vol;
-            GetComponent<BoxCollider>().center = (Vector3)vol/2;
+            Debug.Log("ResizeCollision: " + size + ", " + center);
+            col.size = size;
+            col.center = center;
+        }
+
+        private void ResizeCollisionByRotation()
+        {
+            // Debug.Log("ResizeCollisionByRotation");
+            int rotationStep = currentPlaceable.rotationStep;
+            Vector2 footprint= currentPlaceable.footprint;
+
+            // switch (rotationStep)
+            // {
+            //     case 0:
+            //         col.size =
+            // }
+        }
+
+        private void ResizeCollisionByRendererBounds()
+        {
+            col.size = rend.bounds.size;
+            col.center = rend.bounds.center - transform.position;
         }
 
         /// ACCESSORS ///

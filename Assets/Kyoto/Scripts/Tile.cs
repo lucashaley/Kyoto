@@ -5,6 +5,7 @@ using UnityAtoms.BaseAtoms;
 
 namespace Kyoto
 {
+    [SelectionBase]
     public class Tile : MonoBehaviour
     {
         public enum TileEdge {

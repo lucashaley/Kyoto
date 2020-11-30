@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+// using System.Linq;
 using UnityEngine;
 using UnityAtoms.BaseAtoms;
 
@@ -24,7 +25,7 @@ namespace Kyoto
         public Vector3Int volume = Vector3Int.one;
         public int rotationStep = 0;
 
-        private Transform pivot;
+        public Transform pivot;
 
         private GameObject tileCatch;
         private GameObject geoCatch;
@@ -33,30 +34,32 @@ namespace Kyoto
 
         public BoxCollider bounder;
 
+        // public List<Tile> occipiedTiles; // this is dynamic, which we don't really need
+        public Tile[] occupiedTiles;
+
         void Awake()
         {
             pivot = transform.Find("Pivot");
             positioner = Positioner.Instance;
-            // positioner.placeableEvent.AddListener(this.Deselect);
 
-            CreateBounder();
+            occupiedTiles = new Tile[footprint.x * footprint.y];
+
+            StartCoroutine(Initialization());
+        }
+
+        private IEnumerator Initialization()
+        {
+            Debug.Log("Initialization");
+            bounder = CreateBounder();
             CreateTileCatch();
             CreateGeoCatch();
 
+            // We need to wait here, because for stupid reasons
+            // Unity was trying to SetOccupancy before the bounder
+            // has completed being made.
+            yield return new WaitUntil(() => bounder != null);
+
             SetOccupancy(true);
-        }
-
-        /// <summary>
-        /// Registers the doneMoving, so it can set occupancy
-        /// </summary>
-        void OnEnable()
-        {
-            // GetComponent<GridMover>().doneMoving.AddListener(SetOccupancy);
-        }
-
-        void OnDisable()
-        {
-            // GetComponent<GridMover>().doneMoving.RemoveListener(SetOccupancy);
         }
 
         /// <summary>
@@ -72,29 +75,46 @@ namespace Kyoto
 
             // Turn on Positioner, and assign it to this
             positioner.Activate(this);
-            // Register the Place method for the Positioner
-            // positioner.RegisterMoveEvent(Place);
-            // positioner.rotatePositionerEvent.AddListener(RotateStep);
         }
 
-        public void Deselect()
+        public void Deselect(bool fromPositioner = false)
         {
+            if (fromPositioner)
+            {
+                Quaternion rot = transform.rotation;
+                transform.SetParent(GameObject.Find("Placeables").transform);
+
+                transform.rotation = Quaternion.identity;
+                pivot.rotation = rot;
+            }
             geoCatch.SetActive(true);
         }
 
-        /// <remarks>
-        /// Should this be here or in the Positioner?
-        /// Not working yet!
-        /// </remarks>
-        public void SetOccupancy(bool active)
+        public void BeforeTween()
         {
-            // Debug.Log("Placeable: SetOccupancy", this);
+            SetOccupancy(false);
+        }
+        public void AfterTween()
+        {
+            rotationStep = (rotationStep+1)%4;
+            SetOccupancy(true);
+        }
 
+        /// <remarks>
+        /// </remarks>
+        public void SetOccupancy(bool active = true)
+        {
             Vector2Int start, end = default;
-            // (start, end) = GetCurrentFootprint();
+
             (start, end) = GetTileBounds();
 
-            Debug.Log("SetOccupancy: " + start + ", " + end);
+            int i = 0;
+            foreach (Vector2Int v in this)
+            {
+                Debug.Log(v);
+                occupiedTiles[i] = TileController.Instance.GetTile(v);
+                i++;
+            }
 
             TileController.Instance.SetTileOccupancyByPosition(start, end, active ? this : null);
         }
@@ -104,13 +124,30 @@ namespace Kyoto
             SetOccupancy(false);
         }
 
+        // REFACTOR switch this name with SetOccupancy
+        public void SetOccupancyTo()
+        {
+            SetOccupancy(true);
+        }
+
         public IEnumerator<Vector2Int> GetEnumerator()
         {
-            for (int i = 0; i < footprint.x; i++)
+            // this totally doesn't work with the rotation
+            // for (int i = 0; i < footprint.x; i++)
+            // {
+            //     for (int j = 0; j < footprint.y; j++)
+            //     {
+            //         yield return new Vector2Int(transform.Position2dInt().x + i, transform.Position2dInt().y + j);
+            //     }
+            // }
+            Vector2Int boundsMin, boundsMax;
+            boundsMin = bounder.bounds.min.Vector2IntNoY();
+            boundsMax = bounder.bounds.max.Vector2IntNoY();
+            for (int x = boundsMin.x; x < boundsMax.x; x++)
             {
-                for (int j = 0; j < footprint.y; j++)
+                for (int y = boundsMin.y; y < boundsMax.y; y++)
                 {
-                    yield return new Vector2Int(transform.Position2dInt().x + i, transform.Position2dInt().y + j);
+                    yield return new Vector2Int(x, y);
                 }
             }
         }
@@ -120,15 +157,18 @@ namespace Kyoto
             return GetEnumerator();
         }
 
-        private void CreateBounder()
+        private BoxCollider CreateBounder()
         {
-            bounder = gameObject.AddComponent<BoxCollider>();
-            // bounder.enabled = false;
-            bounder.isTrigger = true;
-            bounder.size = volume.Vector3WithY(0.2f);
-            // bounder.center = (Vector3)volume * 0.5f;
-            // bounder.center.y = 0.1f;
-            bounder.center = bounder.size * 0.5f;
+            Debug.Log("CreateBounder");
+            GameObject bounderObject = new GameObject("Bounder");
+            BoxCollider newBounder = bounderObject.AddComponent<BoxCollider>();
+            newBounder.isTrigger = true;
+            newBounder.size = volume.Vector3WithY(0.2f);
+            newBounder.center = (newBounder.size * 0.5f);
+            bounderObject.transform.SetParent(pivot, false);
+            bounderObject.transform.position -= pivot.localPosition;
+
+            return newBounder;
         }
 
         private void CreateTileCatch()
@@ -155,51 +195,6 @@ namespace Kyoto
             geoCatch.transform.SetParent(pivot.GetChild(0), false);
             MeshCollider geo = geoCatch.AddComponent<MeshCollider>();
             geo.sharedMesh = gameObject.GetComponentInChildren<MeshFilter>().sharedMesh;
-        }
-
-        public (Vector2Int start, Vector2Int end) GetCurrentFootprint()
-        {
-            return GetFootprintWithRotationStep(rotationStep);
-        }
-
-        public (Vector2Int start, Vector2Int end) GetFootprintWithRotationStep(int step)
-        {
-            Vector2Int end = Vector2Int.zero, start = Vector2Int.zero;
-            // REFACTOR should we not subtract 1? We'd have to change
-            // TileController.CheckTileOccupancyByPosition to < instead of <=
-            Vector2Int adjustedFootprint = footprint - Vector2Int.one;
-            // Debug.Log("position: " + transform.Position2dInt());
-            // Debug.Log("adjustedFootprint: " + adjustedFootprint);
-
-            switch (step)
-            {
-                case 0:
-                    start = transform.Position2dInt();
-                    // end = transform.Position2dInt() + adjustedFootprint;
-                    end = start + adjustedFootprint;
-                    break;
-
-                case 1:
-                    start = transform.Position2dInt() - (Vector2Int.up * footprint.x);
-                    // end = transform.Position2dInt() - adjustedFootprint.Transpose();
-                    end = start + adjustedFootprint.Transpose();
-                    break;
-
-                case 2:
-                    start = transform.Position2dInt() - footprint;
-                    // end = transform.Position2dInt() - adjustedFootprint;
-                    end = start + adjustedFootprint;
-                    break;
-
-                case 3:
-                    start = transform.Position2dInt() - (Vector2Int.right * footprint.y);
-                    // end = transform.Position2dInt() + adjustedFootprint.Transpose();
-                    end = start + adjustedFootprint;
-                    break;
-
-            }
-
-            return (start, end);
         }
 
         public (Vector2Int min, Vector2Int max) GetTileBounds()

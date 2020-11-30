@@ -72,6 +72,7 @@ namespace Kyoto
             Vector2Int tileIterator = end - start;
             // Debug.Log("Iterator: " + iterator);
 
+            // this should switch over to the Placeable.
             for (int x = 0; x <= Mathf.Abs(iterator.x); x++)
             {
                 for (int y = 0; y <= Mathf.Abs(iterator.y); y++)

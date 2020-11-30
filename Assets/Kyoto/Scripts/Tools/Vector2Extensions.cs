@@ -6,6 +6,15 @@ namespace Kyoto
 {
     public static class Vector2Extensions
     {
+        public static Vector2Int Vector2Int(this Vector2 v)
+        {
+            return new Vector2Int
+            (
+                Mathf.RoundToInt(v.x),
+                Mathf.RoundToInt(v.y)
+            );
+        }
+
         public static Vector3 Vector3NoY(this Vector2Int v)
         {
             return new Vector3
@@ -34,11 +43,6 @@ namespace Kyoto
                 0,
                 v.y
             );
-        }
-
-        public static Vector2Int Rotate90CW(this Vector2Int v, Vector2Int footprint)
-        {
-            return Vector2Int.one;
         }
 
         public static Vector2Int Transpose(this Vector2Int v)
