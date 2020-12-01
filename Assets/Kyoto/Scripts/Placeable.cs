@@ -110,20 +110,6 @@ namespace Kyoto
                 occupiedTiles[i] = TileController.Instance.SetTileAsOccupied(v, active ? this : null);
                 i++;
             }
-            //
-            // Debug.Log("Bounds: " + bounder.bounds);
-            // Debug.Log("Bounds rotate: " + bounder.bounds.RotateStepAround(pivot.Position2d()));
-            //
-            // // BoundsInt Version
-            // Vector3Int min = bounder.bounds.min.RoundedInt();
-            // Vector3Int size = bounder.bounds.size.RoundedInt();
-            // BoundsInt newBounds = new BoundsInt(min.x, min.y, min.z, size.x, size.y, size.z);
-            //
-            // Debug.Log("newBounds: " + newBounds);
-            // foreach (Vector3Int v in newBounds.allPositionsWithin)
-            // {
-            //     Debug.Log("Next point: " + v);
-            // }
         }
 
         public void ClearOccupancy()
@@ -139,6 +125,7 @@ namespace Kyoto
 
         public IEnumerator<Vector2Int> GetEnumerator()
         {
+            // REFACTOR to use Bounds.Iterator
             Vector2Int boundsMin, boundsMax;
             boundsMin = bounder.bounds.min.Vector2IntNoY();
             boundsMax = bounder.bounds.max.Vector2IntNoY();

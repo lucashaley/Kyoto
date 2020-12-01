@@ -116,6 +116,9 @@ namespace Kyoto
                     {
                         return true;
                     }
+                } else {
+                    // we've gone off the edge, or in a hole
+                    return true;
                 }
             }
             return false;

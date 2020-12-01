@@ -16,9 +16,6 @@ namespace Kyoto
         public Placeable currentPlaceable;
         public ClickCatcher clickCatcher;
 
-        // private Vector2IntEvent movePositionerEvent;
-        // public UnityEvent rotatePositionerEvent;
-
         [Header("State Flags")]
         public bool isMoving;
         private bool isTweening;
@@ -40,18 +37,22 @@ namespace Kyoto
             // Debug.Log("CheckMove");
 
             Vector2Int delta = destination - currentPlaceable.transform.Position2dInt();
-            Vector2Int start, end;
-            (start, end) = currentPlaceable.GetTileBounds();
+            // Vector2Int start, end;
+            // (start, end) = currentPlaceable.GetTileBounds();
+            //
+            // // REFACTOR maybe an offset method for Bounds?
+            //
+            // start += delta;
+            // end += delta;
 
-            // REFACTOR maybe an offset method for Bounds?
-
-            start += delta;
-            end += delta;
+            Bounds newBounds = currentPlaceable.bounder.bounds.Offset(delta);
+            // Debug.Log("newBounds: " + newBounds);
+            return TileController.Instance.CheckTileOccupancyByBounds(newBounds, currentPlaceable);
 
             // Debug.Log("Checking: " + start + ", " + end);
 
             // REFACTOR to use bounds?
-            return TileController.Instance.CheckTileOccupancyByPosition(start, end, currentPlaceable);
+            // return TileController.Instance.CheckTileOccupancyByPosition(start, end, currentPlaceable);
         }
 
         /// <summary>
@@ -66,33 +67,6 @@ namespace Kyoto
             Debug.Log("Trying List version");
             return TileController.Instance.CheckTileOccupancyByBounds(rotatedBounds, currentPlaceable);
         }
-
-        // void MoveTo(Vector2Int destination)
-        // {
-        //     // Debug.Log("MoveTo: " + destination);
-        //
-        //     if (!isTweening)
-        //     {
-        //         // SetOccupancy(false);
-        //
-        //         Tween.Position(transform,
-        //                       destination.Vector3NoY(),
-        //                       fadeValue.Value,
-        //                       0.0f,
-        //                       Tween.EaseInOutStrong,
-        //                       Tween.LoopType.None,
-        //                       StartTween,
-        //                       EndTween
-        //                       );
-        //         Tween.LocalScale(pivot,
-        //                          new Vector3(0.85f, 0.85f, 0.85f),
-        //                          fadeValue.Value,
-        //                          0,
-        //                          curve.curve,
-        //                          Tween.LoopType.None
-        //                          );
-        //     }
-        // }
 
         public void StartTween()
         {
@@ -184,40 +158,24 @@ namespace Kyoto
                     if (t.parent == pivot)
                         t.localPosition = rotationPoint * -1f;
                 }
-                // Debug.Log("currentPlaceable localPosition: " + currentPlaceable.transform.localPosition);
-                // Debug.Log("pivot localPosition: " + pivot.localPosition);
-                //
-                // Debug.Log("rotationPoint Before: " + rotationPoint);
+
                 switch (currentPlaceable.rotationStep)
                 {
                     case 1:
                         rotationPoint = new Vector3(rotationPoint.z, 0f, -rotationPoint.x);
                         break;
                 }
-                // Debug.Log("rotationPoint After: " + rotationPoint);
-
 
                 pivot.localPosition = rotationPoint;
-                // Debug.Log("currentPlaceable localPosition: " + currentPlaceable.transform.localPosition);
-                // Debug.Log("pivot localPosition: " + pivot.localPosition);
             }
         }
 
         private void AddPlaceable(Placeable placeable)
         {
-            // Debug.Log("AddPlaceable: " + placeable.gameObject.name, placeable);
-            // currentPlaceable = placeable;
-            // currentPlaceable.transform.SetParent(pivot);
-            // currentPlaceable.transform.localPosition = Vector3.zero;
-            // Debug.Log("currentPlaceable localPosition: " + currentPlaceable.transform.localPosition);
-            // currentPlaceable.SetTileCatch(false);
-
             SetVolume(placeable.volume);
         }
         private void RemovePlaceable()
         {
-            // currentPlaceable.transform.SetParent(GameObject.Find("Placeables").transform);
-            // currentPlaceable.Deselect(true);
             currentPlaceable.Deselect();
             currentPlaceable = null;
         }
@@ -275,9 +233,11 @@ namespace Kyoto
                 // Debug.Log("Invalid Move: " + invalid);
 
                 if (!invalid)
+                {
                     // MoveTo(newTile.Position2dInt());
                     GetComponent<SimpleMover>().MoveTo(newTile.Position2dInt());
                     currentPlaceable.GetComponent<SimpleMover>().MoveTo(newTile.Position2dInt());
+                }
 
                 currentTileTransform = newTile;
             }

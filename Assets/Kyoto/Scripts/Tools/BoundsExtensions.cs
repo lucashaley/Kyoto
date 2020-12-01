@@ -18,6 +18,15 @@ namespace Kyoto
     		return newBounds;
     	}
 
+        public static Bounds Offset(this Bounds b, Vector2Int offset)
+        {
+            Bounds newBounds = b;
+            newBounds.min += offset.Vector3NoY();
+            newBounds.max += offset.Vector3NoY();
+
+            return newBounds;
+        }
+
         public static List<Vector2Int> ToVector2IntList(this Bounds b)
         {
             // We can't extend with IEnumerator, so this is a fix
