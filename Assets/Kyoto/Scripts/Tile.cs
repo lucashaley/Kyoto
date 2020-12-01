@@ -20,6 +20,7 @@ namespace Kyoto
         // public ViewStateController viewState;
         // REFACTOR to use UnityAtoms
         // float rakeThreshold = 0.5f;
+        public BoolVariable isRaking;
         public FloatVariable rakeThreshold;
         public BoxCollider tileCollider;
         // public Vector3 boundsCenter;
@@ -50,13 +51,11 @@ namespace Kyoto
 
         void OnMouseDown()
         {
-            // REFACTOR to use UnityAtoms
-            // inputController.isRaking = true;
+            isRaking.Value = true;
         }
         void OnMouseUp()
         {
-            // REFACTOR to use UnityAtoms
-            // inputController.isRaking = false;
+            isRaking.Value = false;
         }
 
         void OnCollisionEnter(Collision col)
@@ -66,6 +65,7 @@ namespace Kyoto
 
         void OnTriggerEnter(Collider col)
         {
+            Debug.Log("TriggerEnter: " + gameObject.name + ", " + col.transform.gameObject.name);
             if (Input.GetMouseButton(0))
             {
                 enterEdge = GetEdge(Input.mousePosition);
@@ -74,6 +74,7 @@ namespace Kyoto
 
         void OnTriggerExit(Collider col)
         {
+            Debug.Log("TriggerExit: " + gameObject.name + ", " + col.transform.gameObject.name);
             if (Input.GetMouseButton(0))
             {
                 exitEdge = GetEdge(Input.mousePosition);
@@ -123,7 +124,7 @@ namespace Kyoto
 
         protected TileEdge GetEdge(Vector3 mousePosition)
         {
-            int layerMask = 1 << 26;
+            int layerMask = LayerMask.GetMask("Tiles");
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(mousePosition);
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
