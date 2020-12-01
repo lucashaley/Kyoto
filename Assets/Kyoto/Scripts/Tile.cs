@@ -5,6 +5,7 @@ using UnityAtoms.BaseAtoms;
 
 namespace Kyoto
 {
+    [SelectionBase]
     public class Tile : MonoBehaviour
     {
         public enum TileEdge {
@@ -33,6 +34,7 @@ namespace Kyoto
 
         void Awake()
         {
+            // Debug.Log("Tile: Awake");
             // refactor
             // viewState = GameObject.Find("GameController").GetComponent<ViewStateController>();
             tileCollider = GetComponent<BoxCollider>();
@@ -41,6 +43,9 @@ namespace Kyoto
             boundsMax = tileCollider.bounds.max;
             enterEdge = exitEdge = TileEdge.None;
             TileController.Instance.AddTile(this, transform.Position2dInt());
+
+            // Change the name of the Tile to reflect it's position
+            gameObject.name = "Tile " + transform.Position2dInt();
         }
 
         void OnMouseDown()

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+// using System.Linq;
 using UnityEngine;
 using UnityAtoms.BaseAtoms;
 
@@ -14,93 +15,127 @@ namespace Kyoto
     /// </remarks>
     public class Placeable : MonoBehaviour, IEnumerable<Vector2Int>
     {
-        public Vector2Int footprint = Vector2Int.one;
+        public Vector2Int footprint
+        {
+            get
+            {
+                return volume.Vector2IntNoY();
+            }
+        }
         public Vector3Int volume = Vector3Int.one;
+        public int rotationStep = 0;
 
-        private GameObject model;
+        public Transform pivot;
 
         private GameObject tileCatch;
         private GameObject geoCatch;
 
         private Positioner positioner;
 
+        public BoxCollider bounder;
+
+        // public List<Tile> occipiedTiles; // this is dynamic, which we don't really need
+        public Tile[] occupiedTiles;
+
         void Awake()
         {
-            // Just added the "Geometry" subonbject, messed things up
-            model = transform.Find("Pivot").gameObject;
+            pivot = transform.Find("Pivot");
+            positioner = Positioner.Instance;
 
+            occupiedTiles = new Tile[footprint.x * footprint.y];
+
+            StartCoroutine(Initialization());
+        }
+
+        private IEnumerator Initialization()
+        {
+            Debug.Log("Initialization");
+            bounder = CreateBounder();
             CreateTileCatch();
             CreateGeoCatch();
 
-            positioner = Positioner.Instance;
-            positioner.placeableEvent.AddListener(this.Deselect);
+            // We need to wait here, because for stupid reasons
+            // Unity was trying to SetOccupancy before the bounder
+            // has completed being made.
+            yield return new WaitUntil(() => bounder != null);
+
+            SetOccupancy(true);
         }
 
         /// <summary>
-        /// Registers the doneMoving, so it can set occupancy
+        /// This gets called from the Geometry collider MouseDown
+        /// It makes this Placeable ready to be moved by the Positioner
         /// </summary>
-        void OnEnable()
-        {
-            GetComponent<GridMover>().doneMoving.AddListener(SetOccupancy);
-            GetComponent<GridMover>().doneMoving.AddListener(ClampTransform);
-        }
-
-        void OnDisable()
-        {
-            GetComponent<GridMover>().doneMoving.RemoveListener(SetOccupancy);
-            GetComponent<GridMover>().doneMoving.RemoveListener(ClampTransform);
-        }
-
         public void Select()
         {
+            // Audio cue
+
+            // Turn geometry catch off
             geoCatch.SetActive(false);
+            tileCatch.SetActive(false);
+
+            // Turn on Positioner, and assign it to this
             positioner.Activate(this);
-
-            positioner.movePositionerEvent.AddListener(Place);
-            positioner.rotatePositionerEvent.AddListener(GetComponent<GridMover>().RotateByInt);
         }
 
-        public void Deselect()
+        public void Deselect(bool fromPositioner = false)
         {
-            positioner.movePositionerEvent.RemoveListener(Place);
-            positioner.rotatePositionerEvent.RemoveListener(GetComponent<GridMover>().RotateByInt);
+            if (fromPositioner)
+            {
+                Quaternion rot = transform.rotation;
+                transform.SetParent(GameObject.Find("Placeables").transform);
 
+                transform.rotation = Quaternion.identity;
+                pivot.rotation = rot;
+            }
             geoCatch.SetActive(true);
+            tileCatch.SetActive(true);
         }
 
-        public void Place(Vector2Int pos)
+        public void BeforeTween()
         {
-            // REFACTOR: do we still need this level? Can be direct?
-            GetComponent<GridMover>().MoveToInt(pos);
+            SetOccupancy(false);
+        }
+        public void AfterTween()
+        {
+            rotationStep = (rotationStep+1)%4;
+            SetOccupancy(true);
         }
 
         /// <remarks>
-        /// If doneMoving is true, it sends this Placeeable.
         /// </remarks>
-        void SetOccupancy(bool doneMoving)
+        public void SetOccupancy(bool active = true)
         {
+            int i = 0;
             foreach (Vector2Int v in this)
             {
-                Debug.Log("Occupancy: " + v);
-                TileController.Instance.SetTileOccupancy(v, doneMoving ? this : null);
+                occupiedTiles[i] = TileController.Instance.SetTileAsOccupied(v, active ? this : null);
+                i++;
             }
         }
 
-        void ClampTransform(bool doneMoving)
+        public void ClearOccupancy()
         {
-            Debug.Log("ClampTransform");
-            transform.position = transform.position.RoundedInt();
-            transform.localScale = Vector3.one;
+            SetOccupancy(false);
         }
 
+        // REFACTOR switch this name with SetOccupancy
+        public void SetOccupancyTo()
+        {
+            SetOccupancy(true);
+        }
 
         public IEnumerator<Vector2Int> GetEnumerator()
         {
-            for (int i = 0; i < footprint.x; i++)
+            // REFACTOR to use Bounds.Iterator
+            Vector2Int boundsMin, boundsMax;
+            boundsMin = bounder.bounds.min.Vector2IntNoY();
+            boundsMax = bounder.bounds.max.Vector2IntNoY();
+            for (int x = boundsMin.x; x < boundsMax.x; x++)
             {
-                for (int j = 0; j < footprint.y; j++)
+                for (int y = boundsMin.y; y < boundsMax.y; y++)
                 {
-                    yield return new Vector2Int(transform.Position2dInt().x + i, transform.Position2dInt().y + j);
+                    yield return new Vector2Int(x, y);
                 }
             }
         }
@@ -110,27 +145,57 @@ namespace Kyoto
             return GetEnumerator();
         }
 
+        private BoxCollider CreateBounder()
+        {
+            Debug.Log("CreateBounder");
+            GameObject bounderObject = new GameObject("Bounder");
+            BoxCollider newBounder = bounderObject.AddComponent<BoxCollider>();
+            newBounder.isTrigger = true;
+            newBounder.size = volume.Vector3WithY(0.2f);
+            newBounder.center = (newBounder.size * 0.5f);
+            bounderObject.transform.SetParent(pivot, false);
+            bounderObject.transform.position -= pivot.localPosition;
+
+            return newBounder;
+        }
+
+        public Bounds GetBoundsRotated()
+        {
+            return bounder.bounds.RotateStepAround(pivot.Position2d());
+        }
+
         private void CreateTileCatch()
         {
             // Create the collider dynamically on runtime. So it doesn't clutter up the inspector.
             tileCatch = new GameObject("TileCatch");
             tileCatch.layer = 8;
-            tileCatch.transform.SetParent(transform);
+            // REFACTOR: this assumes the model is the first child.
+            tileCatch.transform.SetParent(pivot.GetChild(0), false);
             BoxCollider col = tileCatch.AddComponent<BoxCollider>();
             col.size = new Vector3(footprint.x, 0.3f, footprint.y);
             col.center = new Vector3(footprint.x*0.5f, -0.05f, footprint.y*0.5f);
-            tileCatch.transform.localPosition = Vector3.zero;
-            // tileCatch.SetActive(false);
+        }
+
+        public void SetTileCatch(bool active)
+        {
+            tileCatch.SetActive(active);
         }
 
         private void CreateGeoCatch()
         {
-            geoCatch = new GameObject("GeoCatch");
-            geoCatch.transform.SetParent(transform);
+            geoCatch = new GameObject("GeoCatch", typeof(PlaceableGeometry));
+            // REFACTOR: this assumes the model is the first child.
+            geoCatch.transform.SetParent(pivot.GetChild(0), false);
             MeshCollider geo = geoCatch.AddComponent<MeshCollider>();
             geo.sharedMesh = gameObject.GetComponentInChildren<MeshFilter>().sharedMesh;
-            geoCatch.transform.localPosition = new Vector3(footprint.x*0.5f, 0f, footprint.y*0.5f);
-            geoCatch.AddComponent<PlaceableGeometry>();
+        }
+
+        public (Vector2Int min, Vector2Int max) GetTileBounds()
+        {
+            Vector2Int min = bounder.bounds.min.Vector2IntNoY();
+            Vector2Int max = (bounder.bounds.max - Vector3.one).Vector2IntNoY();
+
+            return (min, max);
         }
     }
 }

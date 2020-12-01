@@ -9,6 +9,13 @@ namespace Kyoto
 {
     public class GridMover : MonoBehaviour
     {
+        public Placeable placeable;
+
+        // It would be cool to have this just be a list of things to move
+        // So the same GridMover can move the Placeable and the Positioner
+        // at the same time.
+        public List<Transform> movers;
+
         // Footprint of the Object
         public Vector2Int footprint = Vector2Int.one;
 
@@ -16,6 +23,7 @@ namespace Kyoto
 
         public bool fancy = true;
         public bool fromCenter = true;
+        public bool usePivotOffset = true;
 
         // States
         // REFACTOR not sure we need isMoving any more
@@ -30,6 +38,7 @@ namespace Kyoto
 
         public Vector3 rotationPoint;
         private float rotationStart;
+        public int rotationStep = 0;
         public Transform pivot;
 
         // What was this about? Creates nasty infinite loop
@@ -39,136 +48,171 @@ namespace Kyoto
         void Awake()
         {
             rend = GetComponentInChildren<Renderer>();
-            // rotationPoint = transform.position + (footprint.Vector3NoY()/2);
-            rotationPoint = footprint.Vector3NoY() * 0.5f;
+            placeable = GetComponent<Placeable>();
+
             pivot = transform.Find("Pivot");
+
+            // SetPivot();
+        }
+
+        public void SetPivot()
+        {
+            Debug.Log("SetPivot");
+            if ((footprint.x + footprint.y)%2 == 1)
+            {
+                rotationPoint = new Vector3(0.5f, 0f, 0.5f);
+            } else {
+                rotationPoint = new Vector3(footprint.x * 0.5f, 0f, footprint.y * 0.5f);
+            }
+
+            if (usePivotOffset)
+            {
+                // THIS IS THE MOTHERFUCKING PROBLEM
+                // We only want the top level
+                Transform[] childrenTransforms = pivot.GetComponentsInChildren<Transform>();
+                foreach (Transform t in childrenTransforms)
+                {
+                    // only do the top most level of children
+                    if (t.parent == pivot)
+                        t.localPosition = rotationPoint * -1f;
+                }
+                pivot.localPosition = rotationPoint;
+            }
         }
 
         void StartTween()
         {
             isTweening = true;
-            doneMoving.Invoke(false);
         }
 
         void EndTween()
         {
             isTweening = false;
+
+            // REFACTOR this to one Transform extension?
+            // Here's where we clamp the position and rotation to make up for
+            // weird tween artifacts
+            transform.position = transform.position.RoundedInt();
+            transform.localScale = Vector3.one;
+
+            pivot.localEulerAngles = Vector3Int.FloorToInt(pivot.localEulerAngles);
+
+            Debug.Log("Invoking doneMoving");
             doneMoving.Invoke(true);
         }
 
-        public void MoveToInt(Vector2Int destination)
+        void EndTween(Transform t)
+        {
+            t.position = t.position.RoundedInt();
+            transform.localScale = Vector3.one;
+            t.localEulerAngles = Vector3Int.FloorToInt(t.localEulerAngles);
+        }
+
+
+        // public void MoveToInt(Vector2Int destination)
+        // {
+        //     if (!isTweening)
+        //     {
+        //         Tween.Position(transform,
+        //                       destination.Vector3NoY(),
+        //                       fadeValue.Value,
+        //                       0.0f,
+        //                       Tween.EaseInOutStrong,
+        //                       Tween.LoopType.None,
+        //                       // () => isTweening = true,
+        //                       // () => isTweening = false
+        //                       StartTween,
+        //                       EndTween
+        //                       );
+        //         // REFACTOR this to a separate fader component?
+        //         Tween.ShaderVector (rend.material,
+        //                             "_Color",
+        //                             new Vector4 (1, 1, 1, 0),
+        //                             fadeValue.Value,
+        //                             0,
+        //                             curve.curve,
+        //                             Tween.LoopType.None);
+        //         Tween.LocalScale(transform.GetChild(0),
+        //                          new Vector3(0.85f, 0.85f, 0.85f),
+        //                          fadeValue.Value,
+        //                          0,
+        //                          curve.curve,
+        //                          Tween.LoopType.None
+        //                          );
+        //     }
+        // }
+
+        // REFACTOR this name sucks
+        public void MoveMovers(Vector2Int destination)
         {
             if (!isTweening)
             {
-                Tween.Position(transform,
-                              destination.Vector3NoY(),
-                              fadeValue.Value,
-                              0.0f,
-                              Tween.EaseInOutStrong,
-                              Tween.LoopType.None,
-                              // () => isTweening = true,
-                              // () => isTweening = false
-                              StartTween,
-                              EndTween
-                              );
-                // REFACTOR this to a separate fader component?
-                Tween.ShaderVector (rend.material,
-                                    "_Color",
-                                    new Vector4 (1, 1, 1, 0),
-                                    fadeValue.Value,
-                                    0,
-                                    curve.curve,
-                                    Tween.LoopType.None);
-                Tween.LocalScale(transform.GetChild(0),
-                                 new Vector3(0.85f, 0.85f, 0.85f),
-                                 fadeValue.Value,
-                                 0,
-                                 curve.curve,
-                                 Tween.LoopType.None
-                                 );
+                foreach (Transform m in movers)
+                {
+                    Debug.Log("Moving " + m.gameObject.name);
+                    Move(m, destination);
+                }
             }
-            // movePositionerEvent.Invoke(destination);
         }
-
-        void HandleRotateAround(float value)
+        // REFACTOR this name sucks
+        private void Move(Transform t, Vector2Int destination)
         {
-            Debug.Log("RotateAround: " + value);
-            // transform.RotateAround(transform.TransformPoint(rotationPoint),
-            //                        Vector3.up,
-            //                        value);
-            pivot.RotateAround(pivot.TransformPoint(rotationPoint),
-                                  Vector3.up,
-                                  value);
-
-            // REFACTOR: have a callback that sets the position etc to whole values
+            Tween.Position(t,
+                          destination.Vector3NoY(),
+                          fadeValue.Value,
+                          0.0f,
+                          Tween.EaseInOutStrong,
+                          Tween.LoopType.None,
+                          // () => isTweening = true,
+                          // () => isTweening = false
+                          StartTween,
+                          () => EndTween(t)
+                          );
+            // REFACTOR this to a separate fader component?
+            // Tween.ShaderVector (rend.material,
+            //                     "_Color",
+            //                     new Vector4 (1, 1, 1, 0),
+            //                     fadeValue.Value,
+            //                     0,
+            //                     curve.curve,
+            //                     Tween.LoopType.None);
+            Tween.LocalScale(t.GetChild(0),
+                             new Vector3(0.85f, 0.85f, 0.85f),
+                             fadeValue.Value,
+                             0,
+                             curve.curve,
+                             Tween.LoopType.None
+                             );
         }
+
+        // void HandleRotateAround(float value)
+        // {
+        //     pivot.RotateAround(pivot.TransformPoint(rotationPoint),
+        //                           Vector3.up,
+        //                           value);
+        //
+        //     // REFACTOR: have a callback that sets the position etc to whole values
+        // }
 
         /// <remarks>
         /// We're going to assume 90 CW rotation.
         /// </remarks>
-        public void RotateTo(Vector2Int destination)
-        {
-
-        }
-
-        public void RotateByInt(int degrees)
+        public void RotateStep()
         {
             if (!isTweening)
             {
-                Transform t = rotateBase ? rotateBase : transform;
-
-                // Debug.Log("Check if odd footprint: " + ((footprint.x + footprint.y)%2 == 1));
-                // if ((footprint.x + footprint.y)%2 == 1)
-                // {
-                //     Debug.Log("Current position sum: " + (transform.localPosition.x + transform.localPosition.z));
-                //     float currentPoint = transform.position.x + transform.position.z;
-                //     Vector3 newPosition = Vector3.zero;
-                //     if (currentPoint - (int)currentPoint == 0.5)
-                //     {
-                //         Debug.Log("MUNG");
-                //         newPosition = transform.position.Rounded(1);
-                //     } else {
-                //         newPosition = footprint.Vector3NoY()/2;
-                //     }
-                //     Tween.LocalPosition(transform,
-                //                   newPosition,
-                //                   fadeValue.Value,
-                //                   0.0f,
-                //                   Tween.EaseInOutStrong,
-                //                   Tween.LoopType.None,
-                //                   () => isTweening = true,
-                //                   () => isTweening = false
-                //                   );
-                // }
-                // Tween.Rotate(t,
-                //               new Vector3 (0, degrees, 0),
-                //               Space.Self,
-                //               fadeValue.Value,
-                //               0.0f,
-                //               Tween.EaseInOutStrong,
-                //               Tween.LoopType.None,
-                //               () => isTweening = true,
-                //               () => isTweening = false
-                //               );
-
-                Debug.Log("Start " + gameObject.name + ": " + transform.rotation.y);
-                Debug.Log("End: " + (transform.rotation.y + degrees));
-                Debug.Log("Point: " + (transform.localPosition + (footprint.Vector3NoY()/2)));
-                // rotationPoint = transform.position + (footprint.Vector3NoY()/2);
-                rotationStart = pivot.rotation.y;
-                Tween.ValueRelative(rotationStart,
-                            rotationStart + degrees,
-                            HandleRotateAround,
-                            fadeValue.Value,
-                            0.0f,
-                            Tween.EaseInOutStrong,
-                            Tween.LoopType.None,
-                            StartTween,
-                            EndTween
-                            );
+                Tween.LocalRotation(pivot,
+                                    pivot.localEulerAngles + (Vector3.up * 90f),
+                                    fadeValue.Value,
+                                    0.0f,
+                                    Tween.EaseInOutStrong,
+                                    Tween.LoopType.None,
+                                    StartTween,
+                                    EndTween
+                                    );
                 if (fancy)
                 {
-                    Tween.LocalScale(t,
+                    Tween.LocalScale(transform,
                                    new Vector3(0.85f, 0.85f, 0.85f),
                                    fadeValue.Value,
                                    0,
@@ -176,7 +220,48 @@ namespace Kyoto
                                    Tween.LoopType.None
                                    );
                 }
+
+                rotationStep = (rotationStep+1)%4;
             }
+        }
+
+        // public void RotateByIntRelative(int degrees)
+        // {
+        //     if (!isTweening)
+        //     {
+        //         Transform t = rotateBase ? rotateBase : transform;
+        //
+        //         rotationStart = pivot.rotation.y;
+        //         Tween.ValueRelative(rotationStart,
+        //                     rotationStart + degrees,
+        //                     HandleRotateAround,
+        //                     fadeValue.Value,
+        //                     0.0f,
+        //                     Tween.EaseInOutStrong,
+        //                     Tween.LoopType.None,
+        //                     StartTween,
+        //                     EndTween
+        //                     );
+        //         if (fancy)
+        //         {
+        //             Tween.LocalScale(t,
+        //                            new Vector3(0.85f, 0.85f, 0.85f),
+        //                            fadeValue.Value,
+        //                            0,
+        //                            curve.curve,
+        //                            Tween.LoopType.None
+        //                            );
+        //         }
+        //     }
+        // }
+
+        public void AddMover(Transform t)
+        {
+            movers.Add(t);
+        }
+        public void RemoveMover(Transform t)
+        {
+            movers.Remove(t);
         }
     }
 }

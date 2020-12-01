@@ -15,14 +15,24 @@ namespace Kyoto
         //method becomes a part of.
         public static void ResetTransformation(this Transform trans)
         {
-            trans.position = Vector3.zero;
+            trans.localPosition = Vector3.zero;
             trans.localRotation = Quaternion.identity;
             trans.localScale = new Vector3(1, 1, 1);
         }
 
+        public static Vector2 Position2d(this Transform trans)
+        {
+            return trans.position.Vector2NoY();
+        }
+        
         public static Vector2Int Position2dInt(this Transform trans)
         {
             return trans.position.Vector2IntNoY();
+        }
+
+        public static Vector2Int LocalPosition2dInt(this Transform trans)
+        {
+            return trans.localPosition.Vector2IntNoY();
         }
     }
 }
