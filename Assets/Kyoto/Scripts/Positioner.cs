@@ -43,11 +43,14 @@ namespace Kyoto
             Vector2Int start, end;
             (start, end) = currentPlaceable.GetTileBounds();
 
+            // REFACTOR maybe an offset method for Bounds?
+
             start += delta;
             end += delta;
 
             // Debug.Log("Checking: " + start + ", " + end);
 
+            // REFACTOR to use bounds?
             return TileController.Instance.CheckTileOccupancyByPosition(start, end, currentPlaceable);
         }
 
@@ -57,17 +60,11 @@ namespace Kyoto
         /// </summary>
         private bool CheckRotate()
         {
-            Vector2Int min, max;
-            Vector2Int start, end;
-            (min, max) = currentPlaceable.GetTileBounds();
-            Debug.Log("CheckRotate Pivot position: " + pivot.position.Vector2NoY());
-            Debug.Log("CheckRotate Before: " + min + ", " + max);
+            Bounds rotatedBounds = currentPlaceable.GetBoundsRotated();
+            Debug.Log("rotatedBounds: " + rotatedBounds.min + ", " + rotatedBounds.max);
 
-            (start, end) = RotateRectAroundPoint(min, max, pivot.position.Vector2NoY());
-
-            Debug.Log("CheckRotate After: " + start + ", " + end);
-
-            return TileController.Instance.CheckTileOccupancyByPosition(start, end, currentPlaceable);
+            Debug.Log("Trying List version");
+            return TileController.Instance.CheckTileOccupancyByBounds(rotatedBounds, currentPlaceable);
         }
 
         // void MoveTo(Vector2Int destination)

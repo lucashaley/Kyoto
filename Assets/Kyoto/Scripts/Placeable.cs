@@ -104,19 +104,26 @@ namespace Kyoto
         /// </remarks>
         public void SetOccupancy(bool active = true)
         {
-            Vector2Int start, end = default;
-
-            (start, end) = GetTileBounds();
-
             int i = 0;
             foreach (Vector2Int v in this)
             {
-                Debug.Log(v);
-                occupiedTiles[i] = TileController.Instance.GetTile(v);
+                occupiedTiles[i] = TileController.Instance.SetTileAsOccupied(v, active ? this : null);
                 i++;
             }
-
-            TileController.Instance.SetTileOccupancyByPosition(start, end, active ? this : null);
+            //
+            // Debug.Log("Bounds: " + bounder.bounds);
+            // Debug.Log("Bounds rotate: " + bounder.bounds.RotateStepAround(pivot.Position2d()));
+            //
+            // // BoundsInt Version
+            // Vector3Int min = bounder.bounds.min.RoundedInt();
+            // Vector3Int size = bounder.bounds.size.RoundedInt();
+            // BoundsInt newBounds = new BoundsInt(min.x, min.y, min.z, size.x, size.y, size.z);
+            //
+            // Debug.Log("newBounds: " + newBounds);
+            // foreach (Vector3Int v in newBounds.allPositionsWithin)
+            // {
+            //     Debug.Log("Next point: " + v);
+            // }
         }
 
         public void ClearOccupancy()
@@ -132,14 +139,6 @@ namespace Kyoto
 
         public IEnumerator<Vector2Int> GetEnumerator()
         {
-            // this totally doesn't work with the rotation
-            // for (int i = 0; i < footprint.x; i++)
-            // {
-            //     for (int j = 0; j < footprint.y; j++)
-            //     {
-            //         yield return new Vector2Int(transform.Position2dInt().x + i, transform.Position2dInt().y + j);
-            //     }
-            // }
             Vector2Int boundsMin, boundsMax;
             boundsMin = bounder.bounds.min.Vector2IntNoY();
             boundsMax = bounder.bounds.max.Vector2IntNoY();
@@ -169,6 +168,11 @@ namespace Kyoto
             bounderObject.transform.position -= pivot.localPosition;
 
             return newBounder;
+        }
+
+        public Bounds GetBoundsRotated()
+        {
+            return bounder.bounds.RotateStepAround(pivot.Position2d());
         }
 
         private void CreateTileCatch()

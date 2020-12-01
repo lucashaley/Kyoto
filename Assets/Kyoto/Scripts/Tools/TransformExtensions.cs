@@ -20,6 +20,11 @@ namespace Kyoto
             trans.localScale = new Vector3(1, 1, 1);
         }
 
+        public static Vector2 Position2d(this Transform trans)
+        {
+            return trans.position.Vector2NoY();
+        }
+        
         public static Vector2Int Position2dInt(this Transform trans)
         {
             return trans.position.Vector2IntNoY();

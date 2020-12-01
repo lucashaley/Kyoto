@@ -35,6 +35,14 @@ namespace Kyoto
             }
         }
 
+        public Tile SetTileAsOccupied(Vector2Int inPosition, Placeable inPlaceable)
+        {
+            Tile t = GetTile(inPosition);
+            t.GetComponent<TileOccupancy>().SetOccupier(inPlaceable);
+
+            return t;
+        }
+
         public void SetTileOccupancy(Vector2Int inPosition, Placeable inPlaceable)
         {
             // check if tile is null
@@ -62,6 +70,8 @@ namespace Kyoto
         // this is the absolute version
         public bool CheckTileOccupancyByPosition(Vector2Int start, Vector2Int end, Placeable placeable = null)
         {
+            Debug.Log("CheckTileOccupancyByPosition: " + placeable.gameObject.name);
+
             Vector2Int iterator = end - start;
             Vector2Int root = start;
             if (iterator.x < 0 || iterator.y < 0)
@@ -86,6 +96,25 @@ namespace Kyoto
                         {
                             return true;
                         }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public bool CheckTileOccupancyByBounds(Bounds b, Placeable p = null)
+        {
+            // Look at how fucking tight this is
+            foreach (Vector2Int v in b.ToVector2IntList())
+            {
+                Tile currentTile = GetTile(v);
+                if (currentTile != null)
+                {
+                    // Debug.Log("Checking tile: " + currentTile.gameObject.name, currentTile.gameObject);
+                    TileOccupancy currentTileOccupancy = currentTile.GetComponent<TileOccupancy>();
+                    if (currentTileOccupancy.occupier != p && currentTileOccupancy.IsOccupied())
+                    {
+                        return true;
                     }
                 }
             }
