@@ -72,6 +72,7 @@ namespace Kyoto
 
             // Turn geometry catch off
             geoCatch.SetActive(false);
+            tileCatch.SetActive(false);
 
             // Turn on Positioner, and assign it to this
             positioner.Activate(this);
@@ -88,6 +89,7 @@ namespace Kyoto
                 pivot.rotation = rot;
             }
             geoCatch.SetActive(true);
+            tileCatch.SetActive(true);
         }
 
         public void BeforeTween()
