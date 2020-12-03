@@ -3,6 +3,7 @@ using System.Collections.Generic;
 // using System.Linq;
 using UnityEngine;
 using UnityAtoms.BaseAtoms;
+using Pixelplacement;
 
 namespace Kyoto
 {
@@ -13,6 +14,7 @@ namespace Kyoto
     /// <remarks>
     /// The selection happens in the PlaceableSelector class.
     /// </remarks>
+    [RequireComponent(typeof(StateMachine))]
     public class Placeable : MonoBehaviour, IEnumerable<Vector2Int>
     {
         public Vector2Int footprint
@@ -51,7 +53,11 @@ namespace Kyoto
         {
             Debug.Log("Initialization");
             bounder = CreateBounder();
-            CreateTileCatch();
+
+            // We don't need the tileCatch anymore, as we are using code to
+            // check for tile occupancy.
+            // CreateTileCatch();
+
             CreateGeoCatch();
 
             // We need to wait here, because for stupid reasons
@@ -71,8 +77,11 @@ namespace Kyoto
             // Audio cue
 
             // Turn geometry catch off
-            geoCatch.SetActive(false);
-            tileCatch.SetActive(false);
+            geoCatch?.SetActive(false);
+
+            // We don't need the tileCatch anymore, as we are using code to
+            // check for tile occupancy.
+            // tileCatch?.SetActive(false);
 
             // Turn on Positioner, and assign it to this
             positioner.Activate(this);
@@ -89,7 +98,10 @@ namespace Kyoto
                 pivot.rotation = rot;
             }
             geoCatch.SetActive(true);
-            tileCatch.SetActive(true);
+
+            // We don't need the tileCatch anymore, as we are using code to
+            // check for tile occupancy.
+            // tileCatch.SetActive(true);
         }
 
         public void BeforeTween()
@@ -183,11 +195,17 @@ namespace Kyoto
 
         private void CreateGeoCatch()
         {
-            geoCatch = new GameObject("GeoCatch", typeof(PlaceableGeometry));
-            // REFACTOR: this assumes the model is the first child.
-            geoCatch.transform.SetParent(pivot.GetChild(0), false);
-            MeshCollider geo = geoCatch.AddComponent<MeshCollider>();
-            geo.sharedMesh = gameObject.GetComponentInChildren<MeshFilter>().sharedMesh;
+            // // this is the old dynamic version
+            // geoCatch = new GameObject("GeoCatch", typeof(PlaceableGeometry));
+            // // REFACTOR: this assumes the model is the first child.
+            // geoCatch.transform.SetParent(pivot.GetChild(0), false);
+            // MeshCollider geo = geoCatch.AddComponent<MeshCollider>();
+            // geo.sharedMesh = gameObject.GetComponentInChildren<MeshFilter>().sharedMesh;
+
+            // this is the new prefab version.
+            geoCatch = Instantiate(Resources.Load<GameObject>("Prefabs/GeoCatch"), pivot.GetChild(0), false);
+            geoCatch.name = pivot.parent.gameObject.name + " GeoCatch";
+            geoCatch.GetComponent<MeshCollider>().sharedMesh = gameObject.GetComponentInChildren<MeshFilter>().sharedMesh;
         }
 
         public (Vector2Int min, Vector2Int max) GetTileBounds()

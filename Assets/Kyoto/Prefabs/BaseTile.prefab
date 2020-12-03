@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 712773260487609636}
   - component: {fileID: 2627899213873475008}
   - component: {fileID: 3095626058152590213}
+  - component: {fileID: 8256585658831291235}
   m_Layer: 8
   m_Name: BaseTile
   m_TagString: Untagged
@@ -46,7 +47,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96c4d49a6d49f4b3095f9043372a9fab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isRaking: {fileID: 11400000, guid: 2825ece7b8cdc46a9b2a597a5c5eb750, type: 2}
+  canRake: {fileID: 11400000, guid: 990f213e0d88843a7868e12b71e248b4, type: 2}
+  isRaking: {fileID: 11400000, guid: e3d4bf21813a64b3689486d584f1eccf, type: 2}
   rakeThreshold: {fileID: 11400000, guid: 505e439a4ee81464fb4d57784cc1a0a4, type: 2}
   tileCollider: {fileID: 0}
   boundsMin: {x: 0, y: 0, z: 0}
@@ -85,6 +87,41 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   occupier: {fileID: 0}
+--- !u!114 &8256585658831291235
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1806168573998339779}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a6ab7cbc45164d19b20476265c251c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _developerDescription: 
+  _unityEventResponse:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 712773260487609636}
+        m_MethodName: OnCanRakeChangeEvent
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  _actionResponses: []
+  _replayEventBufferOnRegister: 1
+  _eventReference:
+    _usage: 0
+    _event: {fileID: 11400000, guid: 9f7b979fc96ac428c9f156ee725949cd, type: 2}
+    _eventInstancer: {fileID: 0}
+    _variable: {fileID: 0}
+    _variableInstancer: {fileID: 0}
 --- !u!1001 &182618529294282490
 PrefabInstance:
   m_ObjectHideFlags: 0
