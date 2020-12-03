@@ -99,6 +99,12 @@ namespace Kyoto
         {
         }
 
+        public void CanPlateStateChangeListener(bool canPlace)
+        {
+            if (!canPlace)
+                Deactivate();
+        }
+
         public void Activate(Placeable placeable)
         {
             Debug.Log("Activate: " + gameObject.name);
