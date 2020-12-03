@@ -9,6 +9,7 @@ namespace Kyoto
 {
     public class Positioner : Singleton<Positioner>
     {
+        public BoolVariable canPlace;
         public Transform pivot;
         public Transform cube;
         public BoxCollider col;

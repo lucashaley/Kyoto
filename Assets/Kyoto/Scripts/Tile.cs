@@ -20,6 +20,7 @@ namespace Kyoto
         // public ViewStateController viewState;
         // REFACTOR to use UnityAtoms
         // float rakeThreshold = 0.5f;
+        public BoolVariable canRake;
         public BoolVariable isRaking;
         public FloatVariable rakeThreshold;
         public BoxCollider tileCollider;
@@ -30,8 +31,7 @@ namespace Kyoto
         public Texture TopBottom, LeftRight;
         public Texture BottomLeft, BottomRight, TopLeft, TopRight;
 
-        // private Transform2dInt transform2d;
-        // public Vector2Int Position2d { get => transform2d.Position; }
+        // REFACTOR separate out the raking from the basic tile info?
 
         void Awake()
         {
@@ -49,9 +49,19 @@ namespace Kyoto
             gameObject.name = "Tile " + transform.Position2dInt();
         }
 
+        public void OnCanRakeChangeEvent(bool canRake)
+        {
+            Debug.Log("OnIsRakingChangeEvent");
+        }
+
+        // Something has gone wrong here.
         void OnMouseDown()
         {
-            isRaking.Value = true;
+            Debug.Log("canRake: " + canRake.Value);
+            if (canRake.Value)
+            {
+                isRaking.Value = true;
+            }
         }
         void OnMouseUp()
         {
@@ -85,12 +95,12 @@ namespace Kyoto
             // check if we're in the Raking state
             // REFACTOR to use UnityAtoms
             // if (gameController.viewStateController.currentState.gameObject.name == "RakingState")
-            if (1 == 1)
+            if (canRake.Value)
             {
                 // REFACTOR
                 // stop repeating all the set textures
                 Texture newTexture;
-                // Debug.Log(enterEdge & exitEdge);
+                Debug.Log(enterEdge & exitEdge);
                 if ((enterEdge == TileEdge.Top || enterEdge == TileEdge.Bottom) && (exitEdge == TileEdge.Top || exitEdge == TileEdge.Bottom))
                 {
                     newTexture = TopBottom;
@@ -129,7 +139,7 @@ namespace Kyoto
             Ray ray = Camera.main.ScreenPointToRay(mousePosition);
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
             {
-                Debug.LogWarning("<color=lime>Tile</color>.<color=cyan>GetEdge</color>", hit.collider.gameObject);
+                // Debug.LogWarning("<color=lime>Tile</color>.<color=cyan>GetEdge</color>", hit.collider.gameObject);
                 // world coords
                 Vector3 closestPoint = tileCollider.ClosestPointOnBounds(hit.point);
                 // local coords

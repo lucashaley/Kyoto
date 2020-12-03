@@ -17,10 +17,8 @@ namespace Kyoto
             if (inPlaceable)
             {
                 occupier = inPlaceable;
-                GetComponentInChildren<Renderer>().material.color = Color.red;
             } else {
                 occupier = null;
-                GetComponentInChildren<Renderer>().material.color = Color.white;
             }
         }
 
