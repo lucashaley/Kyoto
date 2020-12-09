@@ -4567,7 +4567,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
+<<<<<<< Updated upstream
       objectReference: {fileID: 2100000, guid: 3a9a65878262642759186a5d5ccf76e0, type: 2}
+=======
+      objectReference: {fileID: 2100000, guid: 77c72c719b53b46fca3a3a9e32550911, type: 2}
+>>>>>>> Stashed changes
     - target: {fileID: -927199367670048503, guid: de257cf45106e48829a2a3d115d3a840,
         type: 3}
       propertyPath: m_Name
