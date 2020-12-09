@@ -1,7 +1,8 @@
 using System;
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Kyoto
 {
@@ -14,7 +15,10 @@ namespace Kyoto
         {
             get => System.DateTime.FromBinary(DateTimeLong);
 
-            set => DateTimeLong = value.ToBinary();
+            set
+            {
+                DateTimeLong = value.ToBinary();
+            }
         }
 
         public void Add(TimeSpan span)

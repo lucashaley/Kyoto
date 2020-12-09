@@ -32,6 +32,7 @@ namespace Kyoto
                     dir = Vector3.right;
                     break;
                 case TransformDirection.Up:
+                    Debug.Log("Direction: Up");
                     dir = Vector3.up;
                     break;
                 case TransformDirection.Down:
@@ -47,6 +48,8 @@ namespace Kyoto
                     // transform.localRotation = Quaternion.Euler(dir * variable.Value);
                     break;
                 case TransformType.Rotate:
+                    // Debug.Log("TransformRotationUpdater: Rotate", this);
+                    Debug.Log("TransformRotationUpdater.Rotate: " + (dir * variable.Value), this);
                     transform.localRotation = Quaternion.Euler(dir * variable.Value);
                     break;
             }

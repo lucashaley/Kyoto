@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityAtoms.BaseAtoms;
 
 namespace Kyoto
 {
@@ -13,12 +14,14 @@ namespace Kyoto
 
         public WeightedCycle priorNode, nextNode;
         private float priorKey, nextKey;
-        public TimeController timeController;
+        // public TimeController timeController;
+
+        public FloatVariable percentage;
 
         // Start is called before the first frame update
         void Start()
         {
-            timeController = TimeController.Instance;
+            // timeController = TimeController.Instance;
             InitSiblings();
             InitCurve();
         }
