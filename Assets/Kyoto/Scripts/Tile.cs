@@ -28,6 +28,10 @@ namespace Kyoto
         public Vector3 boundsMin, boundsMax;
         public TileEdge enterEdge, exitEdge;
 
+        public Vector2 corner = Vector2.zero;
+        public bool isStraight;
+        public bool isPerpendicular;
+
         public Texture TopBottom, LeftRight;
         public Texture BottomLeft, BottomRight, TopLeft, TopRight;
 
@@ -105,31 +109,68 @@ namespace Kyoto
                 {
                     newTexture = TopBottom;
                     gameObject.GetComponentInChildren<Renderer>().material.SetTexture("_BumpMap", TopBottom);
+                    isStraight = true;
+                    isPerpendicular = true;
                 }
                 if ((enterEdge == TileEdge.Left || enterEdge == TileEdge.Right) && (exitEdge == TileEdge.Left || exitEdge == TileEdge.Right))
                 {
                     gameObject.GetComponentInChildren<Renderer>().material.SetTexture("_BumpMap", LeftRight);
+                    isStraight = true;
+                    isPerpendicular = false;
                 }
                 if ((enterEdge == TileEdge.Left || exitEdge == TileEdge.Left)  && (enterEdge == TileEdge.Bottom || exitEdge == TileEdge.Bottom))
                 {
                     gameObject.GetComponentInChildren<Renderer>().material.SetTexture("_BumpMap", BottomLeft);
+                    isStraight = false;
+                    corner = Vector2.zero;
                 }
                 if ((enterEdge == TileEdge.Right || exitEdge == TileEdge.Right)  && (enterEdge == TileEdge.Bottom || exitEdge == TileEdge.Bottom))
                 {
                     gameObject.GetComponentInChildren<Renderer>().material.SetTexture("_BumpMap", BottomRight);
+                    isStraight = false;
+                    corner = Vector2.right;
                 }
                 if ((enterEdge == TileEdge.Left || exitEdge == TileEdge.Left)  && (enterEdge == TileEdge.Top || exitEdge == TileEdge.Top))
                 {
                     gameObject.GetComponentInChildren<Renderer>().material.SetTexture("_BumpMap", TopLeft);
+                    isStraight = false;
+                    corner = Vector2.up;
                 }
                 if ((enterEdge == TileEdge.Right || exitEdge == TileEdge.Right)  && (enterEdge == TileEdge.Top || exitEdge == TileEdge.Top))
                 {
                     gameObject.GetComponentInChildren<Renderer>().material.SetTexture("_BumpMap", TopRight);
+                    isStraight = false;
+                    corner = Vector2.one;
                 }
                 //REFACTOR
                 // and just do it here once
                 // GameObject.SetComponentInChildren<Renderer>().material.SetTexture("_BumpMap", newTexture);
+
+                UpdateRake();
             }
+        }
+        
+        /// <summary>
+        /// Called when the script is loaded or a value is changed in the
+        /// inspector (Called in the editor only).
+        /// </summary>
+        void OnValidate()
+        {
+            UpdateRake();
+        }
+
+        private void UpdateRake()
+        {
+            Renderer rend = GetComponentInChildren<Renderer>();
+            // Debug.Log(Shader.PropertyToID("Corner"));
+            MaterialPropertyBlock prop = new MaterialPropertyBlock();
+            rend.GetPropertyBlock(prop);
+            // Debug.Log(prop.isEmpty);
+            prop.SetVector("Corner", corner);
+            prop.SetFloat("IsStraight", System.Convert.ToSingle(isStraight));
+            prop.SetFloat("IsPerpendicular", System.Convert.ToSingle(isPerpendicular));
+            // Debug.Log(prop);
+            rend.SetPropertyBlock(prop);
         }
 
         protected TileEdge GetEdge(Vector3 mousePosition)

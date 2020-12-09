@@ -78,14 +78,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dontDestroyOnLoad: 0
+  canPlace: {fileID: 0}
   pivot: {fileID: 0}
   cube: {fileID: 0}
   col: {fileID: 0}
-  bol: {fileID: 0}
-  currentNonMoverPlaceable: {fileID: 0}
+  currentPlaceable: {fileID: 0}
   clickCatcher: {fileID: 0}
   isMoving: 0
   fancy: 1
+  rotationPoint: {x: 1, y: 1, z: 1}
   usePivotOffset: 1
   mask:
     serializedVersion: 2
@@ -185,7 +186,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: c06e4288e4f22499f88af5f0fb0483e7, type: 2}
+      objectReference: {fileID: 2100000, guid: c14e9f0fd3b894f548246c2b5b026d72, type: 2}
     - target: {fileID: -927199367670048503, guid: 086dd4f13f0e54cfd8a896c6d7a95f10,
         type: 3}
       propertyPath: m_Name
