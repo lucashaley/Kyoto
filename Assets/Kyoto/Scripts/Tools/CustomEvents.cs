@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -21,7 +22,15 @@ namespace Kyoto
     public class BoolEvent : UnityEvent<bool>
     {
     }
+    [System.Serializable]
+    public class FloatEvent : UnityEvent<float>
+    {
+    }
+    public class DateTimeEvent : UnityEvent<DateTime>
+    {
+    }
 
+    
     // We don't really need this stuff.
     public class CustomEvents : MonoBehaviour
     {

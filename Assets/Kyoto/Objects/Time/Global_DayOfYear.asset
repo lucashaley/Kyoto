@@ -9,16 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b46c0f62c93543f88d3eb693740d091, type: 3}
-  m_Name: Global_Azimuth
+  m_Script: {fileID: 11500000, guid: cf8a67b68db3d4650908f8cf6adeda60, type: 3}
+  m_Name: Global_DayOfYear
   m_EditorClassIdentifier: 
   _developerDescription: 
   _id: 
-  _value: 201.95732
-  _changed: {fileID: 11400000, guid: 2a9dfce8a9bbe43f8942b7e65175f017, type: 2}
+  _value: 346
+  _changed: {fileID: 0}
   _changedWithHistory: {fileID: 0}
-  _triggerChangedOnOnEnable: 1
+  _triggerChangedOnOnEnable: 0
   _triggerChangedWithHistoryOnOnEnable: 0
-  _oldValue: 331.89227
+  _oldValue: 345
   _initialValue: 0
   _preChangeTransformers: []

@@ -10,7 +10,8 @@ namespace Kyoto
 
         protected override void SetWeight()
         {
-            weight = curve.Evaluate(timeController.GameTimeNormalized());
+            // weight = curve.Evaluate(timeController.GameTimeNormalized());
+            weight = curve.Evaluate(percentage.Value);
         }
 
     }

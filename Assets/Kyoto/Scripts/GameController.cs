@@ -15,7 +15,7 @@ namespace Kyoto
         private GameObject debugTextObject;
         public Text gameDateNormalizedText;
         public Text gameTimeText;
-        private TimeController timeController;
+        // private TimeController timeController;
         public ViewStateController viewStateController;
 
         [Header("Global Variables")]
@@ -43,7 +43,6 @@ namespace Kyoto
             Debug.Assert(gameDateNormalizedText != null, "Could not find <color=red>gameDateNormalizedText</color>.", gameObject);
             gameTimeText = GameObject.Find("GameTime").GetComponent<Text>();
             Debug.Assert(gameTimeText != null, "Could not find <color=red>gameTimeText</color>.", gameObject);
-            timeController = TimeController.Instance;
             // REFACTOR
             viewStateController = GameObject.Find("ViewController").GetComponent<ViewStateController>();
         }

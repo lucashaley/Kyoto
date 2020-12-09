@@ -21,8 +21,6 @@ namespace Kyoto
 
         void Start()
         {
-            // Set the engine timeScale
-            // Time.timeScale = timeScale.Value;
             realDateTimeVariable.Value = gameDateTimeVariable.Value = System.DateTime.Now;
 
             locationController = LocationController.Instance;
@@ -31,6 +29,8 @@ namespace Kyoto
         // Update is called once per frame
         void Update()
         {
+            Debug.Log(System.DateTime.Now);
+            realDateTimeVariable.Value = System.DateTime.Now;
             TimeSpan difference = new TimeSpan((long)(TimeSpan.TicksPerSecond
                                                     * Time.deltaTime
                                                     * timeScale.Value));
@@ -40,11 +40,6 @@ namespace Kyoto
             gameDateNormalizedVariable.Value = gameDateTimeVariable.NormalizedDate();
             dayOfYear.Value = gameDateTimeVariable.DayOfYear();
             UpdateOrbit();
-        }
-
-        void ChangeDayOfYear()
-        {
-            dayOfYear.Value = 0;
         }
 
         void UpdateOrbit()
